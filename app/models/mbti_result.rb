@@ -60,3 +60,4 @@ class MbtiResult
     }
   end
 end
+

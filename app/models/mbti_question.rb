@@ -62,3 +62,4 @@ class MbtiQuestion
     prompt
   end
 end
+

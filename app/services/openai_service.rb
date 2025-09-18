@@ -168,3 +168,4 @@ class OpenaiService
     ]
   end
 end
+
