@@ -1,0 +1,82 @@
+<div class="header">
+  <h1>診断結果</h1>
+  <p>あなたの性格タイプが判明しました！</p>
+</div>
+
+<div class="content">
+  <div class="result-card">
+    <div class="mbti-type">
+      <%= @mbti_result.mbti_type %>
+    </div>
+    
+    <div class="mbti-description">
+      <%= @mbti_result.description %>
+    </div>
+    
+    <% if @ai_analysis && @ai_analysis != @mbti_result.mbti_type %>
+      <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+        <h4>AI追加分析</h4>
+        <p>AIによる詳細分析では、<strong><%= @ai_analysis %></strong> タイプの可能性も示唆されています。</p>
+      </div>
+    <% end %>
+    
+    <!-- スコア詳細 -->
+    <div class="scores">
+      <% @mbti_result.dimension_scores.each do |dimension_name, scores| %>
+        <div class="score-item">
+          <h4><%= dimension_name %></h4>
+          <% scores.each do |type, score| %>
+            <div style="margin: 10px 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span><%= type %></span>
+                <span><%= score %></span>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill <%= type.downcase %>" style="width: <%= (score.to_f / (scores.values.sum) * 100).round(1) %>%"></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- アクションボタン -->
+    <div style="margin-top: 40px;">
+      <%= link_to "もう一度診断する", mbti_restart_path, method: :post, class: "btn" %>
+      <%= link_to "診断を共有", "#", class: "btn btn-secondary", onclick: "shareResult()" %>
+    </div>
+  </div>
+</div>
+
+<script>
+  function shareResult() {
+    const mbtiType = '<%= @mbti_result.mbti_type %>';
+    const description = '<%= @mbti_result.description %>';
+    const shareText = `MBTI性格診断の結果: ${mbtiType} - ${description}`;
+    
+    if (navigator.share) {
+      navigator.share({
+        title: 'MBTI性格診断結果',
+        text: shareText,
+        url: window.location.href
+      });
+    } else {
+      // フォールバック: クリップボードにコピー
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('結果をクリップボードにコピーしました！');
+      });
+    }
+  }
+  
+  // スコアバーのアニメーション
+  document.addEventListener('DOMContentLoaded', function() {
+    const scoreFills = document.querySelectorAll('.score-fill');
+    scoreFills.forEach(fill => {
+      const width = fill.style.width;
+      fill.style.width = '0%';
+      setTimeout(() => {
+        fill.style.width = width;
+      }, 500);
+    });
+  });
+</script>

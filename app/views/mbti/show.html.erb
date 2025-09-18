@@ -1,0 +1,66 @@
+<div class="header">
+  <h1>MBTI性格診断テスト</h1>
+  <p>質問 <%= @current_question_index + 1 %> / <%= @questions.length %></p>
+</div>
+
+<div class="content">
+  <!-- プログレスバー -->
+  <div class="progress-bar">
+    <div class="progress-fill" style="width: <%= ((@current_question_index + 1).to_f / @questions.length * 100).round(1) %>%"></div>
+  </div>
+
+  <!-- 質問カード -->
+  <div class="question-card">
+    <div class="question-text">
+      <%= @current_question['question'] %>
+    </div>
+    
+    <%= form_with url: mbti_create_path, method: :post, local: true, class: "question-form" do |form| %>
+      <%= form.hidden_field :question_index, value: @current_question_index %>
+      
+      <div class="options">
+        <div class="option" onclick="selectOption('A')">
+          <%= form.radio_button :choice, 'A', id: 'choice_a', required: true %>
+          <label for="choice_a"><%= @current_question['options'][0] %></label>
+        </div>
+        
+        <div class="option" onclick="selectOption('B')">
+          <%= form.radio_button :choice, 'B', id: 'choice_b', required: true %>
+          <label for="choice_b"><%= @current_question['options'][1] %></label>
+        </div>
+      </div>
+      
+      <div style="text-align: center; margin-top: 30px;">
+        <%= form.submit "次の質問へ", class: "btn", id: "next-btn", disabled: true %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  function selectOption(choice) {
+    // ラジオボタンを選択
+    document.getElementById('choice_' + choice.toLowerCase()).checked = true;
+    
+    // 選択されたオプションをハイライト
+    document.querySelectorAll('.option').forEach(option => {
+      option.style.borderColor = '#e9ecef';
+      option.style.backgroundColor = 'white';
+    });
+    
+    event.currentTarget.style.borderColor = '#667eea';
+    event.currentTarget.style.backgroundColor = '#f8f9ff';
+    
+    // 次へボタンを有効化
+    document.getElementById('next-btn').disabled = false;
+  }
+  
+  // フォーム送信時のバリデーション
+  document.querySelector('.question-form').addEventListener('submit', function(e) {
+    const selectedChoice = document.querySelector('input[name="choice"]:checked');
+    if (!selectedChoice) {
+      e.preventDefault();
+      alert('選択肢を選んでください。');
+    }
+  });
+</script>

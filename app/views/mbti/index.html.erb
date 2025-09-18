@@ -1,0 +1,21 @@
+<div class="header">
+  <h1>MBTI性格診断テスト</h1>
+  <p>AIが生成した質問に答えて、あなたの性格タイプを発見しましょう</p>
+</div>
+
+<div class="content">
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>AIがあなたにぴったりの質問を準備しています...</p>
+  </div>
+</div>
+
+<script>
+  // ページ読み込み時に自動的に質問生成を開始
+  document.addEventListener('DOMContentLoaded', function() {
+    // 少し遅延を入れてローディングアニメーションを表示
+    setTimeout(function() {
+      window.location.href = '<%= mbti_question_path(index: 0) %>';
+    }, 2000);
+  });
+</script>
