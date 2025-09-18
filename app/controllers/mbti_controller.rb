@@ -120,6 +120,28 @@ class MbtiController < ApplicationController
     # @mbti_session.destroy
   end
 
+  def analyze
+    session_id = params[:session_id] || session[:mbti_session_id]
+    return render json: { error: 'invalid_session' }, status: :unprocessable_entity if session_id.blank?
+
+    mbti_session = MbtiSession.find_by(session_id: session_id)
+    return render json: { error: 'not_found' }, status: :not_found if mbti_session.nil?
+    return render json: { error: 'not_completed' }, status: :unprocessable_entity unless mbti_session.completed?
+
+    answers = mbti_session.answers_array
+    result = MbtiResult.calculate_mbti_type(answers)
+    mbti_type = params[:type].presence || result.mbti_type
+
+    openai_service = OpenaiService.new
+    analysis = openai_service.generate_detailed_analysis(answers, mbti_type)
+
+    if analysis.nil?
+      return render json: { error: 'analysis_unavailable' }, status: :service_unavailable
+    end
+
+    render json: { mbti_type: mbti_type, type_details: analysis[:type_details], answer_summary: analysis[:answer_summary] }
+  end
+
   def resume
     # セッションIDからセッションを取得
     session_id = params[:session_id]

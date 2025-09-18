@@ -14,4 +14,5 @@ Rails.application.routes.draw do
   post 'mbti/answer', to: 'mbti#answer'
   get 'mbti/result', to: 'mbti#result'
   get 'mbti/resume', to: 'mbti#resume'
+  post 'mbti/analyze', to: 'mbti#analyze'
 end
