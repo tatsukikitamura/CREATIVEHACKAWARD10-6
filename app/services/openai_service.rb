@@ -366,6 +366,51 @@ class OpenaiService
     end
   end
 
+  public
+
+  def generate_detailed_analysis(answers, mbti_type)
+    return nil if ENV['OPENAI_API_KEY'].blank?
+
+    prompt = <<~PROMPT
+      あなたはMBTIの専門家です。以下の出力仕様に厳密に従ってください。
+
+      対象タイプ: #{mbti_type}
+
+      ユーザーの回答:
+      #{answers.each_with_index.map { |a, i| "#{i+1}. 質問: #{a[:question]}\n   回答: #{a[:choice] == 'A' ? a[:optionA] : a[:optionB]} (次元: #{a[:dimension]})" }.join("\n")}
+
+      出力仕様（必ずこのJSONのみを出力、他の文字や注釈は一切含めない）:
+      {
+        "type_details": "対象タイプの特徴、強み、弱み、キャリア傾向、人間関係の傾向を日本語で200〜300文字",
+        "answer_summary": "上記の回答傾向を踏まえた要約を日本語で150〜250文字（具体的観察を含める）"
+      }
+    PROMPT
+
+    response = @client.chat(
+      parameters: {
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "あなたはMBTIと性格分析の専門家です。常に指定のJSONのみで返答してください。" },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.5,
+        max_tokens: 700
+      }
+    )
+
+    content = response.dig("choices", 0, "message", "content")
+    return nil if content.nil?
+
+    begin
+      json_match = content.match(/\{[\s\S]*\}/)
+      json_str = json_match ? json_match[0] : content
+      data = JSON.parse(json_str)
+      { type_details: data["type_details"], answer_summary: data["answer_summary"] }
+    rescue => _e
+      nil
+    end
+  end
+
   def generate_fallback_single_question(dimension)
     fallback_questions = {
       'EI' => [

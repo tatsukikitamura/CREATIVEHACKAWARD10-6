@@ -26,9 +26,14 @@
 - 外部API: OpenAI（質問生成）
 
 ## 環境変数
-- `OPENAI_API_KEY`: OpenAIのAPIキー
+- `OPENAI_API_KEY`: OpenAIのAPIキー（結果画面の「さらに分析する」で利用）
 - `DATABASE_URL`: 本番(PostgreSQL)の接続URL（Herokuで自動付与）
 - `RAILS_MASTER_KEY`: Railsの本番資格情報を使う場合に設定
+
+### .env での設定例（開発）
+```
+OPENAI_API_KEY=sk-xxxxx
+```
 
 ## ローカル開発
 ```bash
