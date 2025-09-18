@@ -19,25 +19,36 @@ class MbtiResult
     }
 
     answers.each do |answer|
-      dimension = answer[:dimension]
-      choice = answer[:choice]
+      # 文字列キーとシンボルキーの両方に対応
+      dimension = answer[:dimension] || answer['dimension']
+      choice = answer[:choice] || answer['choice']
+      
+      Rails.logger.info "Processing answer: dimension=#{dimension}, choice=#{choice}"
       
       if dimension && choice
         # 選択肢Aを選んだ場合は最初の次元、Bを選んだ場合は2番目の次元にスコアを加算
         if choice == 'A'
           scores[dimension[0]] += 1
+          Rails.logger.info "Added 1 to #{dimension[0]}, new score: #{scores[dimension[0]]}"
         elsif choice == 'B'
           scores[dimension[1]] += 1
+          Rails.logger.info "Added 1 to #{dimension[1]}, new score: #{scores[dimension[1]]}"
         end
+      else
+        Rails.logger.warn "Invalid answer data: #{answer.inspect}"
       end
     end
 
+    Rails.logger.info "Final scores: #{scores.inspect}"
+    
     # MBTIタイプを決定
     mbti_type = ''
     mbti_type += scores['E'] > scores['I'] ? 'E' : 'I'
     mbti_type += scores['S'] > scores['N'] ? 'S' : 'N'
     mbti_type += scores['T'] > scores['F'] ? 'T' : 'F'
     mbti_type += scores['J'] > scores['P'] ? 'J' : 'P'
+
+    Rails.logger.info "Calculated MBTI type: #{mbti_type}"
 
     new(
       mbti_type: mbti_type,

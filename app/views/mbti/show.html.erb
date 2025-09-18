@@ -1,67 +1,101 @@
-<div class="header">
-  <h1>MBTI性格診断テスト</h1>
-  <p>質問 <%= @current_question_index + 1 %> / <%= @questions.length %></p>
-</div>
-
-<div class="content">
-  <!-- プログレスバー -->
-  <div class="progress-bar">
-    <div class="progress-fill" style="width: <%= ((@current_question_index + 1).to_f / @questions.length * 100).round(1) %>%"></div>
-  </div>
-
-  <!-- 質問カード -->
-  <div class="question-card">
-    <div class="question-text">
-      <%= @current_question['question'] %>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBTI診断 - 質問 <%= @current_question_number %></title>
+  <%= stylesheet_link_tag 'mbti_show', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="container">
+    <div class="question-counter">
+      質問 <%= @current_question_number %>
     </div>
-    
-    <%= form_with url: mbti_create_path, method: :post, local: true, class: "question-form" do |form| %>
-      <%= form.hidden_field :question_index, value: @current_question_index %>
-      
+
+    <% if flash[:alert] %>
+      <div class="alert">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+
+    <h2 class="question"><%= @current_question.question %></h2>
+
+    <%= form_with url: mbti_answer_path, method: :post, local: true, id: "answer-form" do |form| %>
+      <%= form.hidden_field :session_id, value: @mbti_session.session_id %>
+      <%= form.hidden_field :authenticity_token, value: form_authenticity_token %>
       <div class="options">
-        <div class="option" onclick="selectOption('A')">
-          <%= form.radio_button :choice, 'A', id: 'choice_a', required: true %>
-          <label for="choice_a"><%= @current_question['options'][0] %></label>
+        <div class="option" data-choice="A">
+          <div class="option-label">A</div>
+          <div class="option-text"><%= @current_question.options[0] %></div>
         </div>
-        
-        <div class="option" onclick="selectOption('B')">
-          <%= form.radio_button :choice, 'B', id: 'choice_b', required: true %>
-          <label for="choice_b"><%= @current_question['options'][1] %></label>
+        <div class="option" data-choice="B">
+          <div class="option-label">B</div>
+          <div class="option-text"><%= @current_question.options[1] %></div>
         </div>
       </div>
-      
-      <div style="text-align: center; margin-top: 30px;">
-        <%= form.submit "次の質問へ", class: "btn", id: "next-btn", disabled: true %>
+
+      <%= form.hidden_field :choice, id: "choice-input" %>
+
+      <div class="navigation">
+        <% if @current_question_number > 1 %>
+          <%= link_to "前の質問", mbti_show_path(session_id: @mbti_session.session_id), class: "back-button" %>
+        <% else %>
+          <div></div>
+        <% end %>
+
+        <div class="right-buttons">
+          <% if @can_terminate_early %>
+            <button type="button" class="terminate-button" id="terminate-button">
+              診断を終了
+            </button>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </div>
-</div>
 
-<script>
-  function selectOption(choice) {
-    // ラジオボタンを選択
-    document.getElementById('choice_' + choice.toLowerCase()).checked = true;
-    
-    // 選択されたオプションをハイライト
-    document.querySelectorAll('.option').forEach(option => {
-      option.style.borderColor = '#e9ecef';
-      option.style.backgroundColor = 'white';
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const options = document.querySelectorAll('.option');
+      const choiceInput = document.getElementById('choice-input');
+      const form = document.getElementById('answer-form');
+      const terminateButton = document.getElementById('terminate-button');
+
+      options.forEach(option => {
+        option.addEventListener('click', function() {
+          // 他の選択を解除
+          options.forEach(opt => opt.classList.remove('selected'));
+          
+          // 現在の選択をマーク
+          this.classList.add('selected');
+          
+          // 選択値を設定
+          const choice = this.dataset.choice;
+          choiceInput.value = choice;
+          
+          // 少し遅延してからフォームを送信（視覚的フィードバックのため）
+          setTimeout(() => {
+            form.submit();
+          }, 300);
+        });
+      });
+
+      // 診断終了ボタンの処理
+      if (terminateButton) {
+        terminateButton.addEventListener('click', function() {
+          if (confirm('診断を終了しますか？')) {
+            // 終了用のhidden fieldを追加
+            const terminateInput = document.createElement('input');
+            terminateInput.type = 'hidden';
+            terminateInput.name = 'terminate_early';
+            terminateInput.value = 'true';
+            form.appendChild(terminateInput);
+            form.submit();
+          }
+        });
+      }
     });
-    
-    event.currentTarget.style.borderColor = '#667eea';
-    event.currentTarget.style.backgroundColor = '#f8f9ff';
-    
-    // 次へボタンを有効化
-    document.getElementById('next-btn').disabled = false;
-  }
-  
-  // フォーム送信時のバリデーション
-  document.querySelector('.question-form').addEventListener('submit', function(e) {
-    const selectedChoice = document.querySelector('input[name="choice"]:checked');
-    if (!selectedChoice) {
-      e.preventDefault();
-      alert('選択肢を選んでください。');
-    }
-  });
-</script>
-
+  </script>
+</body>
+</html>

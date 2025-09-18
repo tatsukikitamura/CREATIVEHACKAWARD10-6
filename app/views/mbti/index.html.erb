@@ -1,22 +1,47 @@
-<div class="header">
-  <h1>MBTI性格診断テスト</h1>
-  <p>AIが生成した質問に答えて、あなたの性格タイプを発見しましょう</p>
-</div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBTI性格診断テスト</title>
+  <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🧠</div>
+    <h1 class="title">MBTI性格診断テスト</h1>
+    <p class="subtitle">AIが生成する質問に答えて、あなたの性格タイプを発見しましょう</p>
+    
+    <div class="description">
+      <h3>このテストについて</h3>
+      <ul>
+        <li>AIが動的に生成する12個の質問に回答</li>
+        <li>4つの次元で性格を分析（外向性/内向性、感覚/直感、思考/感情、判断/知覚）</li>
+        <li>16種類のMBTIタイプからあなたに最適なタイプを判定</li>
+        <li>詳細な分析結果とスコアを表示</li>
+        <li>所要時間：約5-10分</li>
+      </ul>
+    </div>
 
-<div class="content">
-  <div class="loading">
-    <div class="spinner"></div>
-    <p>AIがあなたにぴったりの質問を準備しています...</p>
+    <a href="<%= mbti_select_mode_path(session_id: @session_id) %>" class="start-button">診断を開始する</a>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🤖</div>
+        <h4>AI生成質問</h4>
+        <p>OpenAIが生成する個別化された質問</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <h4>詳細分析</h4>
+        <p>各次元のスコアと詳細な説明</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <h4>リアルタイム</h4>
+        <p>即座に結果を表示</p>
+      </div>
+    </div>
   </div>
-</div>
-
-<script>
-  // ページ読み込み時に自動的に質問生成を開始
-  document.addEventListener('DOMContentLoaded', function() {
-    // 少し遅延を入れてローディングアニメーションを表示
-    setTimeout(function() {
-      window.location.href = '<%= mbti_question_path(index: 0) %>';
-    }, 2000);
-  });
-</script>
-
+</body>
+</html>

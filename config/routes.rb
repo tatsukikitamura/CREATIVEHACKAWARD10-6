@@ -6,13 +6,12 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # MBTI診断アプリケーションのルート
-  root "mbti#index"
-  
-  resources :mbti, only: [:index, :create, :result] do
-    collection do
-      get :question, path: 'question/:index', as: :question
-      get :result, as: :result
-      post :restart, as: :restart
-    end
-  end
+  root 'mbti#index'
+  get 'mbti', to: 'mbti#index'
+  get 'mbti/select_mode', to: 'mbti#select_mode'
+  post 'mbti/set_mode', to: 'mbti#set_mode'
+  get 'mbti/show', to: 'mbti#show'
+  post 'mbti/answer', to: 'mbti#answer'
+  get 'mbti/result', to: 'mbti#result'
+  get 'mbti/resume', to: 'mbti#resume'
 end

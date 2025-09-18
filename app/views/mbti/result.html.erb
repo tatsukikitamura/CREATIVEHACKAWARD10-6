@@ -1,83 +1,120 @@
-<div class="header">
-  <h1>診断結果</h1>
-  <p>あなたの性格タイプが判明しました！</p>
-</div>
-
-<div class="content">
-  <div class="result-card">
-    <div class="mbti-type">
-      <%= @mbti_result.mbti_type %>
-    </div>
-    
-    <div class="mbti-description">
-      <%= @mbti_result.description %>
-    </div>
-    
-    <% if @ai_analysis && @ai_analysis != @mbti_result.mbti_type %>
-      <div style="background: #e7f3ff; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
-        <h4>AI追加分析</h4>
-        <p>AIによる詳細分析では、<strong><%= @ai_analysis %></strong> タイプの可能性も示唆されています。</p>
-      </div>
-    <% end %>
-    
-    <!-- スコア詳細 -->
-    <div class="scores">
-      <% @mbti_result.dimension_scores.each do |dimension_name, scores| %>
-        <div class="score-item">
-          <h4><%= dimension_name %></h4>
-          <% scores.each do |type, score| %>
-            <div style="margin: 10px 0;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span><%= type %></span>
-                <span><%= score %></span>
-              </div>
-              <div class="score-bar">
-                <div class="score-fill <%= type.downcase %>" style="width: <%= (score.to_f / (scores.values.sum) * 100).round(1) %>%"></div>
-              </div>
-            </div>
-          <% end %>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBTI診断結果</title>
+  <%= stylesheet_link_tag 'mbti_result', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="result-icon">🎯</div>
+      <h1 class="mbti-type"><%= @result.mbti_type %></h1>
+      <p class="mbti-description"><%= @result.description %></p>
+      
+      <% if @answer_count < 20 %>
+        <div class="warning-message">
+          <div class="warning-icon">⚠️</div>
+          <div class="warning-text">
+            <strong>診断精度について</strong><br>
+            回答数が<%= @answer_count %>問と少ないため、診断結果の精度が低い可能性があります。<br>
+            より正確な診断のためには、20問以上回答することをお勧めします。
+          </div>
         </div>
       <% end %>
     </div>
-    
-    <!-- アクションボタン -->
-    <div style="margin-top: 40px;">
-      <%= link_to "もう一度診断する", mbti_restart_path, method: :post, class: "btn" %>
-      <%= link_to "診断を共有", "#", class: "btn btn-secondary", onclick: "shareResult()" %>
+
+    <div class="scores-container">
+      <h2 class="scores-title">詳細スコア</h2>
+      <div class="dimensions">
+        <% @result.dimension_scores.each do |dimension_name, scores| %>
+          <div class="dimension">
+            <div class="dimension-name"><%= dimension_name %></div>
+            <div class="dimension-scores">
+              <% scores.each do |type, score| %>
+                <div class="score-item">
+                  <div class="score-label"><%= type %></div>
+                  <div class="score-value"><%= score %></div>
+                </div>
+              <% end %>
+            </div>
+            <div class="score-bar">
+              <% 
+                total = scores.values.sum
+                first_type = scores.keys.first
+                second_type = scores.keys.last
+                first_percentage = total > 0 ? (scores[first_type].to_f / total * 100).round : 50
+                second_percentage = 100 - first_percentage
+              %>
+              <div class="score-fill <%= first_type.downcase %>" style="width: <%= first_percentage %>%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
+              <span><%= first_type %>: <%= first_percentage %>%</span>
+              <span><%= second_type %>: <%= second_percentage %>%</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a href="<%= mbti_resume_path(session_id: @mbti_session.session_id) %>" class="action-button continue-button">続きから再開する</a>
+      <a href="<%= mbti_path %>" class="action-button">もう一度診断する</a>
+      <button onclick="shareResult()" class="action-button secondary">結果を共有</button>
+    </div>
+
+    <div class="share-section" id="share-section" style="display: none;">
+      <h3 class="share-title">結果を共有</h3>
+      <div class="share-text" id="share-text">
+        私のMBTIタイプは「<%= @result.mbti_type %>」です！<br>
+        <%= @result.description %><br><br>
+        あなたも診断してみませんか？<br>
+        <%= request.base_url %>
+      </div>
+      <button onclick="copyToClipboard()" class="copy-button">コピー</button>
     </div>
   </div>
-</div>
 
-<script>
-  function shareResult() {
-    const mbtiType = '<%= @mbti_result.mbti_type %>';
-    const description = '<%= @mbti_result.description %>';
-    const shareText = `MBTI性格診断の結果: ${mbtiType} - ${description}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: 'MBTI性格診断結果',
-        text: shareText,
-        url: window.location.href
-      });
-    } else {
-      // フォールバック: クリップボードにコピー
-      navigator.clipboard.writeText(shareText).then(() => {
-        alert('結果をクリップボードにコピーしました！');
+  <script>
+    function shareResult() {
+      const shareSection = document.getElementById('share-section');
+      if (shareSection.style.display === 'none') {
+        shareSection.style.display = 'block';
+        shareSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        shareSection.style.display = 'none';
+      }
+    }
+
+    function copyToClipboard() {
+      const shareText = document.getElementById('share-text').textContent;
+      navigator.clipboard.writeText(shareText).then(function() {
+        alert('結果をコピーしました！');
+      }, function(err) {
+        console.error('コピーに失敗しました: ', err);
+        // フォールバック
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('結果をコピーしました！');
       });
     }
-  }
-  
-  // スコアバーのアニメーション
-  document.addEventListener('DOMContentLoaded', function() {
-    const scoreFills = document.querySelectorAll('.score-fill');
-    scoreFills.forEach(fill => {
-      const width = fill.style.width;
-      fill.style.width = '0%';
-      setTimeout(() => {
-        fill.style.width = width;
-      }, 500);
-    });
-  });
-</script>
 
+    // アニメーション効果
+    document.addEventListener('DOMContentLoaded', function() {
+      const scoreFills = document.querySelectorAll('.score-fill');
+      scoreFills.forEach(fill => {
+        const width = fill.style.width;
+        fill.style.width = '0%';
+        setTimeout(() => {
+          fill.style.width = width;
+        }, 500);
+      });
+    });
+  </script>
+</body>
+</html>

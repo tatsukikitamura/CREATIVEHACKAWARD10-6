@@ -1,0 +1,142 @@
+// MBTI 質問ページ専用スタイル
+@import 'mbti_common';
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  max-width: 700px;
+}
+
+.question-counter {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #667eea;
+  background: #f8f9fa;
+  padding: 10px 20px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.question-number {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.question {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.option {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 15px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.option:hover {
+  border-color: #667eea;
+  background: #f0f2ff;
+  transform: translateY(-2px);
+}
+
+.option.selected {
+  border-color: #667eea;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.option-label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.option-text {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.right-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+
+.terminate-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.terminate-button:hover {
+  background: #5a6268;
+}
+
+.back-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+
+@media (max-width: 768px) {
+  .question {
+    font-size: 1.3rem;
+  }
+  
+  .navigation {
+    flex-direction: column;
+    gap: 15px;
+  }
+}

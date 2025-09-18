@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物語モード選択 - MBTI診断</title>
+  <%= stylesheet_link_tag 'mbti_common', 'data-turbo-track': 'reload' %>
+  <style>
+    .mode-selection {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .mode-title {
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 1rem;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .mode-subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 3rem;
+    }
+    
+    .modes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .mode-card {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid transparent;
+    }
+    
+    .mode-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .mode-card.selected {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #f8f9ff, #e8f0ff);
+    }
+    
+    .mode-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .mode-name {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    
+    .mode-description {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    
+    .mode-example {
+      font-size: 0.9rem;
+      color: #888;
+      font-style: italic;
+    }
+    
+    .continue-button {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .continue-button.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .continue-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .back-link {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      display: inline-block;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="mode-selection">
+      <%= link_to "← 戻る", mbti_path, class: "back-link" %>
+      
+      <h1 class="mode-title">物語モードを選択</h1>
+      <p class="mode-subtitle">あなたの好みの世界観でMBTI診断を体験しましょう</p>
+      
+      <%= form_with url: mbti_set_mode_path, method: :post, local: true, id: "mode-form" do |form| %>
+        <%= form.hidden_field :session_id, value: @session_id %>
+        <%= form.hidden_field :story_mode, id: "selected-mode" %>
+        
+        <div class="modes-grid">
+          <div class="mode-card" data-mode="horror">
+            <div class="mode-icon">👻</div>
+            <div class="mode-name">ホラー</div>
+            <div class="mode-description">
+              暗い夜道、古い屋敷、謎めいた出来事...<br>
+              恐怖と緊張の中で、あなたの本当の性格が明らかになります。
+            </div>
+            <div class="mode-example">
+              例：「暗い森で道に迷った時、あなたは...」
+            </div>
+          </div>
+          
+          <div class="mode-card" data-mode="adventure">
+            <div class="mode-icon">🗺️</div>
+            <div class="mode-name">アドベンチャー</div>
+            <div class="mode-description">
+              未知の土地への冒険、宝物探し、危険な挑戦...<br>
+              エキサイティングな冒険の中で、あなたの冒険者としての性格を発見します。
+            </div>
+            <div class="mode-example">
+              例：「古代遺跡の謎を解く時、あなたは...」
+            </div>
+          </div>
+          
+          <div class="mode-card" data-mode="mystery">
+            <div class="mode-icon">🔍</div>
+            <div class="mode-name">ミステリー</div>
+            <div class="mode-description">
+              謎めいた事件、隠された真実、複雑な人間関係...<br>
+              推理と分析の中で、あなたの探偵としての性格を明かします。
+            </div>
+            <div class="mode-example">
+              例：「不可解な事件の手がかりを発見した時、あなたは...」
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" class="continue-button" id="continue-button">
+          選択したモードで診断を開始
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const modeCards = document.querySelectorAll('.mode-card');
+      const continueButton = document.getElementById('continue-button');
+      const selectedModeInput = document.getElementById('selected-mode');
+      
+      modeCards.forEach(card => {
+        card.addEventListener('click', function() {
+          // 他のカードの選択を解除
+          modeCards.forEach(c => c.classList.remove('selected'));
+          
+          // 現在のカードを選択
+          this.classList.add('selected');
+          
+          // 選択されたモードを設定
+          const mode = this.dataset.mode;
+          selectedModeInput.value = mode;
+          
+          // ボタンを有効化
+          continueButton.classList.add('active');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

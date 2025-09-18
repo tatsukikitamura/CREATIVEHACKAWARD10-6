@@ -1,0 +1,271 @@
+// MBTI 結果ページ専用スタイル
+@import 'mbti_common';
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.header {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.result-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.mbti-type {
+  font-size: 3rem;
+  font-weight: bold;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 10px;
+}
+
+.mbti-description {
+  font-size: 1.3rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.warning-message {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 10px;
+  padding: 20px;
+  margin-top: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.warning-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.warning-text {
+  color: #856404;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.warning-text strong {
+  color: #6c5ce7;
+  font-weight: 600;
+}
+
+.scores-container {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  margin-bottom: 30px;
+}
+
+.scores-title {
+  font-size: 1.8rem;
+  color: #333;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.dimensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.dimension {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 25px;
+  text-align: center;
+}
+
+.dimension-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.dimension-scores {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.score-item {
+  text-align: center;
+  flex: 1;
+}
+
+.score-label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.score-bar {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.score-fill.e {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.score-fill.i {
+  background: linear-gradient(45deg, #764ba2, #667eea);
+}
+
+.score-fill.s {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.score-fill.n {
+  background: linear-gradient(45deg, #20c997, #28a745);
+}
+
+.score-fill.t {
+  background: linear-gradient(45deg, #dc3545, #fd7e14);
+}
+
+.score-fill.f {
+  background: linear-gradient(45deg, #fd7e14, #dc3545);
+}
+
+.score-fill.j {
+  background: linear-gradient(45deg, #6f42c1, #e83e8c);
+}
+
+.score-fill.p {
+  background: linear-gradient(45deg, #e83e8c, #6f42c1);
+}
+
+.actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.action-button.secondary {
+  background: #6c757d;
+}
+
+.action-button.secondary:hover {
+  background: #5a6268;
+}
+
+.action-button.continue-button {
+  background: linear-gradient(45deg, #28a745, #20c997);
+  order: -1; // 最初に表示
+}
+
+.action-button.continue-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
+}
+
+.share-section {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+}
+
+.share-title {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.share-text {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.copy-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.copy-button:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .header, .scores-container, .share-section {
+    padding: 20px;
+  }
+  
+  .mbti-type {
+    font-size: 2.5rem;
+  }
+  
+  .dimensions {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}

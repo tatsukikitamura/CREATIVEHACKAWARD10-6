@@ -35,20 +35,17 @@ export OPENAI_API_KEY="your_openai_api_key_here"
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-### 3. データベースのセットアップ
+**注意**: APIキーが設定されていない場合、フォールバック用の固定質問が使用されます。
 
-```bash
-rails db:create
-rails db:migrate
-```
-
-### 4. アプリケーションの起動
+### 3. アプリケーションの起動
 
 ```bash
 rails server
 ```
 
 ブラウザで `http://localhost:3000` にアクセスしてください。
+
+**注意**: このアプリケーションはSQLite3データベースを使用してセッションデータを管理します。
 
 ## 使用方法
 
@@ -63,6 +60,7 @@ rails server
 - **AI API**: OpenAI GPT-3.5-turbo
 - **フロントエンド**: HTML, CSS, JavaScript (Vanilla)
 - **データベース**: SQLite3
+- **セッション管理**: データベースベース（Cookieオーバーフロー対策）
 
 ## ファイル構成
 
@@ -72,7 +70,8 @@ app/
 │   └── mbti_controller.rb          # MBTI診断のコントローラー
 ├── models/
 │   ├── mbti_question.rb            # 質問モデル
-│   └── mbti_result.rb              # 結果モデル
+│   ├── mbti_result.rb              # 結果モデル
+│   └── mbti_session.rb             # セッション管理モデル
 ├── services/
 │   └── openai_service.rb           # OpenAI API連携サービス
 └── views/
