@@ -52,6 +52,9 @@ class MbtiController < ApplicationController
 
     @current_question_number = @mbti_session.current_question_number
     @can_terminate_early = @mbti_session.can_terminate_early?
+    
+    # 質問の次元に基づいてUIテーマを決定
+    @ui_theme = determine_ui_theme(@current_question.dimension)
   end
 
   def answer
@@ -60,6 +63,10 @@ class MbtiController < ApplicationController
       current_question = @mbti_session.current_question
       dimension = current_question.dimension || @mbti_session.random_dimension
       
+      Rails.logger.info "Answer processing - Question dimension: #{current_question.dimension}"
+      Rails.logger.info "Answer processing - Fallback dimension: #{@mbti_session.random_dimension}"
+      Rails.logger.info "Answer processing - Final dimension: #{dimension}"
+      
       answer = {
         question: current_question.question,
         choice: params[:choice],
@@ -67,6 +74,8 @@ class MbtiController < ApplicationController
         optionB: current_question.options[1],
         dimension: dimension
       }
+      
+      Rails.logger.info "Answer data to be saved: #{answer.inspect}"
       
       @mbti_session.add_answer(@mbti_session.current_question_index, answer)
 
@@ -165,6 +174,25 @@ class MbtiController < ApplicationController
   end
 
   private
+
+  def determine_ui_theme(dimension)
+    case dimension
+    when 'EI'
+      # 外向性/内向性 - 活発 vs 静か
+      'dynamic'
+    when 'SN'
+      # 感覚/直感 - 現実的 vs 抽象的
+      'analytical'
+    when 'TF'
+      # 思考/感情 - 論理的 vs 感情的
+      'emotional'
+    when 'JP'
+      # 判断/知覚 - 構造的 vs 柔軟
+      'structured'
+    else
+      'default'
+    end
+  end
 
   def set_mbti_session
     session_id = params[:session_id] || session[:mbti_session_id]

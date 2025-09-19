@@ -1,0 +1,221 @@
+// MBTI質問テーマ別スタイル
+
+// デフォルトテーマ（基本）
+.theme-default {
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --accent-color: #f093fb;
+  --background-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --border-color: #e9ecef;
+  --hover-color: #f0f2ff;
+  --animation-speed: 0.3s;
+  --animation-style: ease;
+}
+
+// ダイナミックテーマ（外向性/内向性 - EI）
+.theme-dynamic {
+  --primary-color: #ff6b6b;
+  --secondary-color: #4ecdc4;
+  --accent-color: #45b7d1;
+  --background-gradient: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+  --card-background: #ffffff;
+  --text-color: #2c3e50;
+  --border-color: #e8f4f8;
+  --hover-color: #fff5f5;
+  --animation-speed: 0.2s;
+  --animation-style: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  // 活発なアニメーション効果
+  .option:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+  }
+  
+  .option.selected {
+    animation: pulse-dynamic 0.6s ease-in-out;
+  }
+  
+  .question-counter {
+    /* アニメーションを削除 */
+  }
+}
+
+// アナリティカルテーマ（感覚/直感 - SN）
+.theme-analytical {
+  --primary-color: #6c5ce7;
+  --secondary-color: #a29bfe;
+  --accent-color: #74b9ff;
+  --background-gradient: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 50%, #74b9ff 100%);
+  --card-background: #f8f9ff;
+  --text-color: #2d3436;
+  --border-color: #ddd6fe;
+  --hover-color: #f3f0ff;
+  --animation-speed: 0.4s;
+  --animation-style: ease-in-out;
+  
+  // 分析的で落ち着いたアニメーション
+  .option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.2);
+  }
+  
+  .option.selected {
+    animation: glow-analytical 0.8s ease-in-out;
+  }
+  
+  .question-counter {
+    /* アニメーションを削除 */
+  }
+}
+
+// エモーショナルテーマ（思考/感情 - TF）
+.theme-emotional {
+  --primary-color: #fd79a8;
+  --secondary-color: #fdcb6e;
+  --accent-color: #e17055;
+  --background-gradient: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 50%, #e17055 100%);
+  --card-background: #fff5f8;
+  --text-color: #2d3436;
+  --border-color: #fce4ec;
+  --hover-color: #fef7f0;
+  --animation-speed: 0.35s;
+  --animation-style: ease;
+  
+  // 感情的で温かみのあるアニメーション
+  .option:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 7px 22px rgba(253, 121, 168, 0.25);
+  }
+  
+  .option.selected {
+    animation: heartbeat-emotional 0.6s ease-in-out;
+  }
+  
+  .question-counter {
+    /* アニメーションを削除 */
+  }
+}
+
+// ストラクチャードテーマ（判断/知覚 - JP）
+.theme-structured {
+  --primary-color: #00b894;
+  --secondary-color: #00cec9;
+  --accent-color: #0984e3;
+  --background-gradient: linear-gradient(135deg, #00b894 0%, #00cec9 50%, #0984e3 100%);
+  --card-background: #f0fffe;
+  --text-color: #2d3436;
+  --border-color: #d1f2eb;
+  --hover-color: #f0fdfa;
+  --animation-speed: 0.25s;
+  --animation-style: ease-out;
+  
+  // 構造的で整然としたアニメーション
+  .option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(0, 184, 148, 0.2);
+  }
+  
+  .option.selected {
+    animation: slide-structured 0.5s ease-out;
+  }
+  
+  .question-counter {
+    /* アニメーションを削除 */
+  }
+}
+
+// アニメーション定義
+@keyframes pulse-dynamic {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes glow-analytical {
+  0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(108, 92, 231, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
+}
+
+@keyframes heartbeat-emotional {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.03); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.03); }
+  70% { transform: scale(1); }
+}
+
+@keyframes slide-structured {
+  0% { transform: translateX(-10px); opacity: 0.8; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+// テーマ適用の基本スタイル
+body {
+  transition: background var(--animation-speed) var(--animation-style);
+  background: var(--background-gradient);
+}
+
+.container {
+  transition: all var(--animation-speed) var(--animation-style);
+  background: var(--card-background);
+  color: var(--text-color);
+}
+
+.question-counter {
+  transition: all var(--animation-speed) var(--animation-style);
+  background: var(--primary-color);
+  color: white;
+}
+
+.question {
+  transition: color var(--animation-speed) var(--animation-style);
+  color: var(--text-color);
+}
+
+.option {
+  transition: all var(--animation-speed) var(--animation-style);
+  border-color: var(--border-color);
+  background: var(--card-background);
+}
+
+.option:hover {
+  border-color: var(--primary-color);
+  background: var(--hover-color);
+}
+
+.option.selected {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.btn {
+  transition: all var(--animation-speed) var(--animation-style);
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+}
+
+.btn:hover {
+  background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
+}
+
+.terminate-button {
+  transition: all var(--animation-speed) var(--animation-style);
+  background: var(--secondary-color);
+}
+
+.terminate-button:hover {
+  background: var(--accent-color);
+}
+
+.back-button {
+  transition: all var(--animation-speed) var(--animation-style);
+  background: var(--secondary-color);
+}
+
+.back-button:hover {
+  background: var(--accent-color);
+}
+
