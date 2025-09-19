@@ -82,6 +82,9 @@ class OpenaiService
         "dimension": "#{dimension}"
       }
       
+      重要: dimensionフィールドには必ず2文字の文字列（#{dimension}）を指定してください。
+      1文字だけ（例: E, I, S, N, T, F, J, P）ではなく、必ず2文字のペア（例: EI, SN, TF, JP）で指定してください。
+      
       必ず有効なJSON形式で出力し、他のテキストは含めないでください。
     PROMPT
 
@@ -177,6 +180,9 @@ class OpenaiService
         "optionB": "選択肢B",
         "dimension": "#{dimension}"
       }
+      
+      重要: dimensionフィールドには必ず2文字の文字列（#{dimension}）を指定してください。
+      1文字だけ（例: E, I, S, N, T, F, J, P）ではなく、必ず2文字のペア（例: EI, SN, TF, JP）で指定してください。
       
       必ず有効なJSON形式で出力し、他のテキストは含めないでください。
     PROMPT

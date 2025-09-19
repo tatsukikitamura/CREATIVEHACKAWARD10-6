@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MBTI診断 - 質問 <%= @current_question_number %></title>
   <%= stylesheet_link_tag 'mbti_show', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'mbti_themes', 'data-turbo-track': 'reload' %>
 </head>
-<body>
+<body class="theme-<%= @ui_theme %>">
   <div class="container">
     <div class="question-counter">
       質問 <%= @current_question_number %>
@@ -61,6 +62,13 @@
       const choiceInput = document.getElementById('choice-input');
       const form = document.getElementById('answer-form');
       const terminateButton = document.getElementById('terminate-button');
+      const body = document.body;
+      const container = document.querySelector('.container');
+      const questionElement = document.querySelector('.question');
+      const questionText = questionElement.textContent;
+
+      // 質問の内容に基づいて追加のUI調整を行う
+      adjustUIForQuestionContent(questionText);
 
       options.forEach(option => {
         option.addEventListener('click', function() {
@@ -74,10 +82,13 @@
           const choice = this.dataset.choice;
           choiceInput.value = choice;
           
+          // テーマに応じた選択アニメーション
+          playSelectionAnimation(this);
+          
           // 少し遅延してからフォームを送信（視覚的フィードバックのため）
           setTimeout(() => {
             form.submit();
-          }, 300);
+          }, 500);
         });
       });
 
@@ -95,6 +106,121 @@
           }
         });
       }
+
+      // 質問内容に基づくUI調整関数
+      function adjustUIForQuestionContent(questionText) {
+        const currentTheme = body.className.match(/theme-(\w+)/);
+        if (!currentTheme) return;
+
+        const theme = currentTheme[1];
+        
+        // 質問のキーワードに基づいて追加の調整
+        if (questionText.includes('人') || questionText.includes('交流') || questionText.includes('会話')) {
+          // 社会的な質問の場合
+          addSocialEffects(theme);
+        } else if (questionText.includes('考え') || questionText.includes('分析') || questionText.includes('論理')) {
+          // 思考的な質問の場合
+          addThinkingEffects(theme);
+        } else if (questionText.includes('感情') || questionText.includes('気持ち') || questionText.includes('感じ')) {
+          // 感情的な質問の場合
+          addEmotionalEffects(theme);
+        } else if (questionText.includes('計画') || questionText.includes('整理') || questionText.includes('構造')) {
+          // 構造的な質問の場合
+          addStructuralEffects(theme);
+        }
+      }
+
+      // テーマ別の追加エフェクト
+      function addSocialEffects(theme) {
+        if (theme === 'dynamic') {
+          // より活発なアニメーション
+          container.style.animation = 'pulse-dynamic 2s infinite';
+        }
+      }
+
+      function addThinkingEffects(theme) {
+        if (theme === 'analytical') {
+          // より冷静なアニメーション（質問文のサイズ変更は削除）
+          // questionElement.style.animation = 'float-analytical 4s ease-in-out infinite';
+        }
+      }
+
+      function addEmotionalEffects(theme) {
+        if (theme === 'emotional') {
+          // より温かみのあるエフェクト
+          container.style.boxShadow = '0 20px 40px rgba(253, 121, 168, 0.2)';
+        }
+      }
+
+      function addStructuralEffects(theme) {
+        if (theme === 'structured') {
+          // より整然としたエフェクト
+          container.style.border = '2px solid var(--primary-color)';
+        }
+      }
+
+      // 選択時のアニメーション
+      function playSelectionAnimation(selectedOption) {
+        const theme = body.className.match(/theme-(\w+)/);
+        if (!theme) return;
+
+        switch(theme[1]) {
+          case 'dynamic':
+            selectedOption.style.animation = 'pulse-dynamic 0.6s ease-in-out';
+            break;
+          case 'analytical':
+            selectedOption.style.animation = 'glow-analytical 0.8s ease-in-out';
+            break;
+          case 'emotional':
+            selectedOption.style.animation = 'heartbeat-emotional 0.6s ease-in-out';
+            break;
+          case 'structured':
+            selectedOption.style.animation = 'slide-structured 0.5s ease-out';
+            break;
+        }
+      }
+
+      // ページ読み込み時のテーマ別エフェクト
+      function initializeThemeEffects() {
+        const theme = body.className.match(/theme-(\w+)/);
+        if (!theme) return;
+
+        // コンテナの初期アニメーション
+        container.style.opacity = '0';
+        container.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+          container.style.transition = 'all 0.6s ease-out';
+          container.style.opacity = '1';
+          container.style.transform = 'translateY(0)';
+        }, 100);
+
+        // 質問カウンターのアニメーション（スケール変更を削除）
+        const questionCounter = document.querySelector('.question-counter');
+        if (questionCounter) {
+          questionCounter.style.opacity = '0';
+          
+          setTimeout(() => {
+            questionCounter.style.transition = 'opacity 0.4s ease-out';
+            questionCounter.style.opacity = '1';
+          }, 200);
+        }
+
+        // 選択肢の順次表示
+        options.forEach((option, index) => {
+          option.style.opacity = '0';
+          option.style.transform = 'translateX(-20px)';
+          
+          setTimeout(() => {
+            option.style.transition = 'all 0.4s ease-out';
+            option.style.opacity = '1';
+            option.style.transform = 'translateX(0)';
+          }, 300 + (index * 100));
+        });
+      }
+
+      // 初期化
+      initializeThemeEffects();
     });
   </script>
 </body>
