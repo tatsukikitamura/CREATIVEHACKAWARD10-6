@@ -55,21 +55,27 @@ body {
   border-radius: 15px;
   padding: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  /* Avoid size/position jumps: limit transitions to color/background only */
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   text-align: left;
+  /* Unify card height across options and dimensions */
+  min-height: 84px; /* approx 2 lines of text + padding */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .option:hover {
   border-color: #667eea;
   background: #f0f2ff;
-  transform: translateY(-2px);
 }
 
 .option.selected {
   border-color: #667eea;
   background: linear-gradient(45deg, #667eea, #764ba2);
   color: white;
-  transform: scale(1.02);
+  /* サイズ・位置の変化を禁止 */
+  transform: none !important;
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 

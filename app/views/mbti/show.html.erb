@@ -38,22 +38,24 @@
 
       <%= form.hidden_field :choice, id: "choice-input" %>
 
-      <div class="navigation">
-        <% if @current_question_number > 1 %>
-          <%= link_to "前の質問", mbti_show_path(session_id: @mbti_session.session_id), class: "back-button" %>
-        <% else %>
-          <div></div>
-        <% end %>
-
-        <div class="right-buttons">
-          <% if @can_terminate_early %>
-            <button type="button" class="terminate-button" id="terminate-button">
-              診断を終了
-            </button>
-          <% end %>
-        </div>
-      </div>
+      
     <% end %>
+
+    <div class="navigation">
+      <% if @current_question_number > 1 %>
+        <%= button_to "前の質問", mbti_back_path, method: :post, params: { session_id: @mbti_session.session_id }, class: "back-button", data: { turbo: false } %>
+      <% else %>
+        <div></div>
+      <% end %>
+
+      <div class="right-buttons">
+        <% if @can_terminate_early %>
+          <button type="button" class="terminate-button" id="terminate-button">
+            診断を終了
+          </button>
+        <% end %>
+      </div>
+    </div>
   </div>
 
   <script>

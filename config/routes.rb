@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   post 'mbti/set_mode', to: 'mbti#set_mode'
   get 'mbti/show', to: 'mbti#show'
   post 'mbti/answer', to: 'mbti#answer'
+  post 'mbti/back', to: 'mbti#back'
   get 'mbti/result', to: 'mbti#result'
   get 'mbti/resume', to: 'mbti#resume'
   post 'mbti/analyze', to: 'mbti#analyze'

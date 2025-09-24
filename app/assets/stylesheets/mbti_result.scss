@@ -190,7 +190,7 @@
 }
 
 .action-button:hover {
-  transform: translateY(-2px);
+  /* Avoid layout shift */
   box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
 }
 
@@ -208,7 +208,7 @@
 }
 
 .action-button.continue-button:hover {
-  transform: translateY(-2px);
+  /* Avoid layout shift */
   box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
 }
 
@@ -248,7 +248,6 @@
 
 .copy-button:hover {
   background: #218838;
-  transform: translateY(-1px);
 }
 
 @media (max-width: 768px) {

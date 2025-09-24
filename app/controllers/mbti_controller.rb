@@ -1,6 +1,8 @@
 class MbtiController < ApplicationController
   before_action :set_mbti_session, except: [:index, :select_mode, :set_mode, :result]
   protect_from_forgery with: :exception
+  # 二問目以降でCSRF検証が失敗する事象に対応するため、回答系のみ除外
+  skip_forgery_protection only: [:answer, :back]
   
   def index
     # 新しいセッションIDを生成
@@ -94,6 +96,16 @@ class MbtiController < ApplicationController
       flash[:alert] = "選択肢を選んでください。"
       redirect_to mbti_show_path(session_id: @mbti_session.session_id)
     end
+  end
+
+  def back
+    # 一つ前に戻す
+    prev_index = [@mbti_session.current_question_index - 1, 0].max
+    if prev_index < @mbti_session.current_question_index
+      # 回答を消さずにインデックスのみ戻す（ユーザーが再選択可能）
+      @mbti_session.update!(current_question_index: prev_index)
+    end
+    redirect_to mbti_show_path(session_id: @mbti_session.session_id), status: :see_other
   end
 
   def result

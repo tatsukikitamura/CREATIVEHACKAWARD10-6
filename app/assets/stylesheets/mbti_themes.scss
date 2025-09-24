@@ -29,12 +29,12 @@
   
   // 活発なアニメーション効果
   .option:hover {
-    transform: translateY(-4px) scale(1.02);
+    /* サイズ変化を禁止 */
     box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
   }
   
   .option.selected {
-    animation: pulse-dynamic 0.6s ease-in-out;
+    /* スケールアニメーションを無効化 */
   }
   
   .question-counter {
@@ -57,12 +57,13 @@
   
   // 分析的で落ち着いたアニメーション
   .option:hover {
-    transform: translateY(-2px);
+    /* サイズ/位置の変化を禁止 */
     box-shadow: 0 6px 20px rgba(108, 92, 231, 0.2);
   }
   
   .option.selected {
-    animation: glow-analytical 0.8s ease-in-out;
+    /* ボックスシャドウのみの演出に限定 */
+    animation: none;
   }
   
   .question-counter {
@@ -85,12 +86,13 @@
   
   // 感情的で温かみのあるアニメーション
   .option:hover {
-    transform: translateY(-3px) scale(1.01);
+    /* サイズ変化を禁止 */
     box-shadow: 0 7px 22px rgba(253, 121, 168, 0.25);
   }
   
   .option.selected {
-    animation: heartbeat-emotional 0.6s ease-in-out;
+    /* スケールアニメーションを無効化 */
+    animation: none;
   }
   
   .question-counter {
@@ -113,12 +115,13 @@
   
   // 構造的で整然としたアニメーション
   .option:hover {
-    transform: translateY(-2px);
+    /* 位置の変化を禁止 */
     box-shadow: 0 5px 18px rgba(0, 184, 148, 0.2);
   }
   
   .option.selected {
-    animation: slide-structured 0.5s ease-out;
+    /* 変形アニメーションを無効化 */
+    animation: none;
   }
   
   .question-counter {
@@ -127,11 +130,7 @@
 }
 
 // アニメーション定義
-@keyframes pulse-dynamic {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
+/* 変形系アニメーションは不使用（スケール/位置の変化を禁止） */
 
 @keyframes glow-analytical {
   0% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0.4); }
@@ -139,18 +138,9 @@
   100% { box-shadow: 0 0 0 0 rgba(108, 92, 231, 0); }
 }
 
-@keyframes heartbeat-emotional {
-  0% { transform: scale(1); }
-  14% { transform: scale(1.03); }
-  28% { transform: scale(1); }
-  42% { transform: scale(1.03); }
-  70% { transform: scale(1); }
-}
+/* unused: heartbeat-emotional removed */
 
-@keyframes slide-structured {
-  0% { transform: translateX(-10px); opacity: 0.8; }
-  100% { transform: translateX(0); opacity: 1; }
-}
+/* unused: slide-structured removed */
 
 // テーマ適用の基本スタイル
 body {
@@ -176,7 +166,10 @@ body {
 }
 
 .option {
-  transition: all var(--animation-speed) var(--animation-style);
+  /* 色と影のみトランジション（サイズ・位置は固定） */
+  transition: background-color var(--animation-speed) var(--animation-style),
+              border-color var(--animation-speed) var(--animation-style),
+              box-shadow var(--animation-speed) var(--animation-style);
   border-color: var(--border-color);
   background: var(--card-background);
 }
