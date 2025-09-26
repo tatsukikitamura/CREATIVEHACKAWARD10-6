@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIゲームマスター - MBTI診断</title>
+  <%= stylesheet_link_tag 'mbti_common', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'mbti_game_master', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="game-master-container">
+    <!-- ヘッダー -->
+    <div class="game-header">
+      <div class="story-progress">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: <%= @progress %>%"></div>
+        </div>
+        <div class="progress-text">進捗: <%= @progress %>%</div>
+      </div>
+      <div class="story-goal">
+        <h2>🎯 目標: <%= @goal %></h2>
+      </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div class="story-content">
+      <div class="scene-text">
+        <%= simple_format(@scene_text) %>
+      </div>
+
+      <!-- 選択肢 -->
+      <div class="choices-container">
+        <h3 class="choices-title">あなたの選択</h3>
+        <%= form_with url: mbti_game_master_answer_path, method: :post, local: true, class: "choices-form" do |form| %>
+          <%= form.hidden_field :session_id, value: @mbti_session.session_id %>
+          <%= form.hidden_field :question_dimension, value: @question_dimension %>
+          
+          <div class="choices-grid">
+            <% @choices.each_with_index do |choice, index| %>
+              <div class="choice-item">
+                <%= form.radio_button :choice_value, choice['value'], 
+                    id: "choice_#{index}", 
+                    class: "choice-radio",
+                    required: true %>
+                <%= form.label "choice_value_#{choice['value']}", 
+                    choice['text'], 
+                    for: "choice_#{index}",
+                    class: "choice-label" %>
+                <%= form.hidden_field :progress_impact, value: choice['progress_impact'] %>
+              </div>
+            <% end %>
+          </div>
+          
+          <div class="submit-container">
+            <%= form.submit "選択する", class: "submit-button" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- サイドバー -->
+    <div class="game-sidebar">
+      <div class="inventory-section">
+        <h3>🎒 持ち物</h3>
+        <% if @inventory.any? %>
+          <ul class="inventory-list">
+            <% @inventory.each do |item| %>
+              <li class="inventory-item"><%= item %></li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="empty-inventory">まだ何も持っていません</p>
+        <% end %>
+      </div>
+
+      <div class="story-info">
+        <h3>📖 物語情報</h3>
+        <div class="info-item">
+          <strong>次元:</strong> <%= @question_dimension %>
+        </div>
+        <div class="info-item">
+          <strong>モード:</strong> <%= @mbti_session.story_mode&.capitalize || 'Adventure' %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 選択肢のアニメーション
+    document.addEventListener('DOMContentLoaded', function() {
+      const choiceItems = document.querySelectorAll('.choice-item');
+      choiceItems.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          item.style.transition = 'all 0.3s ease';
+          item.style.opacity = '1';
+          item.style.transform = 'translateY(0)';
+        }, index * 100);
+      });
+
+      // プログレスバーのアニメーション
+      const progressFill = document.querySelector('.progress-fill');
+      const targetWidth = progressFill.style.width;
+      progressFill.style.width = '0%';
+      setTimeout(() => {
+        progressFill.style.transition = 'width 1s ease';
+        progressFill.style.width = targetWidth;
+      }, 500);
+    });
+
+    // 選択肢のクリック処理
+    function updateSelection() {
+      // 全ての選択肢からselectedクラスを削除
+      document.querySelectorAll('.choice-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      // 選択された選択肢にselectedクラスを追加
+      const checkedRadio = document.querySelector('.choice-radio:checked');
+      if (checkedRadio) {
+        checkedRadio.parentElement.classList.add('selected');
+      }
+    }
+
+    // ラジオボタンの変更イベント
+    document.querySelectorAll('.choice-radio').forEach(radio => {
+      radio.addEventListener('change', updateSelection);
+    });
+
+    // ラベルのクリックイベント
+    document.querySelectorAll('.choice-label').forEach(label => {
+      label.addEventListener('click', function(e) {
+        e.preventDefault();
+        const radio = this.previousElementSibling;
+        if (radio && radio.type === 'radio') {
+          radio.checked = true;
+          updateSelection();
+        }
+      });
+    });
+
+    // 選択肢のホバー効果
+    document.querySelectorAll('.choice-label').forEach(label => {
+      label.addEventListener('mouseenter', function() {
+        this.parentElement.classList.add('hovered');
+      });
+      
+      label.addEventListener('mouseleave', function() {
+        this.parentElement.classList.remove('hovered');
+      });
+    });
+  </script>
+  
+  <%= render 'shared/footer' %>
+</body>
+</html>

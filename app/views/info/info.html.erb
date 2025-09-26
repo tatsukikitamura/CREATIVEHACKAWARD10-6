@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>プロジェクト情報 - MBTI性格診断テスト</title>
+  <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'info', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🧠</div>
+    <h1 class="title">プロジェクト情報</h1>
+    <p class="subtitle">MBTI性格診断テスト - AI活用による革新的な診断システム</p>
+    
+    <div class="info-sections">
+      <!-- プロジェクト概要 -->
+      <div class="info-section">
+        <h2>📋 プロジェクト概要</h2>
+        <div class="info-content">
+          <p>AIが動的に生成する質問に答えるだけで、MBTI性格タイプを診断・可視化するWebアプリです。4つの次元（外向性/内向性、感覚/直感、思考/感情、判断/知覚）をもとに回答し、16タイプから最適なタイプを推定します。</p>
+          
+          <div class="highlight-box">
+            <h3>🎯 主な特徴</h3>
+            <ul>
+              <li><strong>AI生成質問</strong>：OpenAIで回答内容に応じた物語仕立ての質問を逐次生成</li>
+              <li><strong>物語モード</strong>：「ホラー」「アドベンチャー」「ミステリー」から選択</li>
+              <li><strong>2つの診断方式</strong>：通常モードとAIゲームマスターモード</li>
+              <li><strong>進捗管理</strong>：サーバ側セッションモデルで質問位置・回答履歴を保持</li>
+              <li><strong>リアルタイム</strong>：回答に応じて直ちに次の質問・結果へ反映</li>
+            </ul>
+          </div>
+          
+          <div class="highlight-box" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); margin-top: 1rem;">
+            <h3>🚀 差別化ポイント（USP）</h3>
+            <ul>
+              <li><strong>物語モード</strong>：回答のしやすさが向上</li>
+              <li><strong>回答数無制限</strong>：より詳細な分析が可能</li>
+              <li><strong>自己認識・アイデンティティ形成</strong>：MBTIにとどまらない探究</li>
+              <li><strong>AIの再定義</strong>：「個性の均質化」ではなく「個性の多様化」を促進</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技術スタック -->
+      <div class="info-section">
+        <h2>⚙️ 技術スタック</h2>
+        <div class="tech-grid">
+          <div class="tech-item">
+            <div class="tech-icon">🛤️</div>
+            <h3>Rails 7</h3>
+            <p>Ruby 3.2.2 Webアプリケーションフレームワーク</p>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🤖</div>
+            <h3>OpenAI API</h3>
+            <p>GPT-3.5-turboによる質問生成・分析</p>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🗄️</div>
+            <h3>PostgreSQL</h3>
+            <p>本番DB（Heroku Postgres）/ 開発SQLite3</p>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">📱</div>
+            <h3>Frontend</h3>
+            <p>Turbo / Stimulus / Importmap</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- GitHub情報 -->
+      <div class="info-section">
+        <h2>📂 GitHub情報</h2>
+        <div class="github-info">
+          <div class="github-card">
+            <div class="github-header">
+              <h3>🔗 リポジトリ</h3>
+            </div>
+            <div class="github-content">
+              <p><strong>リポジトリ名：</strong> <a href="https://github.com/tatsukikitamura/CREATIVEHACKAWARD10-6" target="_blank" class="github-link">tatsukikitamura/CREATIVEHACKAWARD10-6</a></p>
+              <p><strong>説明：</strong> AIが動的に生成する質問に答えるだけで、MBTI性格タイプを診断・可視化するWebアプリ</p>
+              <p><strong>本番サイト：</strong> <a href="https://mbti-search-854b363bf31b.herokuapp.com/" target="_blank" class="github-link">https://mbti-search-854b363bf31b.herokuapp.com/</a></p>
+              <p><strong>メイン言語：</strong> Ruby (59.2%), HTML (24.7%), SCSS (13.6%)</p>
+              <p><strong>ライセンス：</strong> プロジェクト目的に従って利用</p>
+            </div>
+          </div>
+          
+          <div class="github-stats">
+            <h3>📊 プロジェクト統計</h3>
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-number">17</div>
+                <div class="stat-label">コミット数</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">16</div>
+                <div class="stat-label">MBTIタイプ</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">物語モード</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-number">2</div>
+                <div class="stat-label">診断方式</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 開発者情報 -->
+      <div class="info-section">
+        <h2>👨‍💻 開発者情報</h2>
+        <div class="developer-info">
+          <div class="developer-card">
+            <div class="developer-avatar">👤</div>
+            <div class="developer-details">
+              <h3>tatsukikitamura</h3>
+              <p><a href="https://github.com/tatsukikitamura" target="_blank" class="github-link">GitHub Profile</a></p>
+              <p>CREATIVE HACK AWARD 10 参加作品</p>
+              <p>AI技術を活用した革新的なWebアプリケーション</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ライセンス・免責事項 -->
+      <div class="info-section">
+        <h2>📄 ライセンス・免責事項</h2>
+        <div class="legal-info">
+          <div class="legal-box">
+            <h3>⚠️ 免責事項</h3>
+            <p>この診断結果は参考情報であり、医学的・心理学的な診断ではありません。重要な判断を行う際は、専門家にご相談ください。</p>
+          </div>
+          
+          <div class="legal-box">
+            <h3>🔒 プライバシー</h3>
+            <p>ユーザーの回答データは診断目的のみに使用され、第三者と共有されることはありません。セッション終了後、データは適切に管理されます。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="back-section">
+      <a href="<%= mbti_path %>" class="back-button">← トップページに戻る</a>
+    </div>
+  </div>
+  
+  <%= render 'shared/footer' %>
+</body>
+</html>

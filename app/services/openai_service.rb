@@ -6,7 +6,7 @@ class OpenaiService
     )
   end
 
-  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress)
+  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress, custom_story = nil)
     Rails.logger.info "Starting OpenAI API call for continuing story MBTI question generation"
     Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}, Mode: #{story_mode}, Progress: #{story_progress}"
     
@@ -42,6 +42,12 @@ class OpenaiService
         atmosphere: 'ミステリー・推理',
         setting: '謎めいた事件、隠された真実、複雑な人間関係',
         tone: '推理と分析が必要な状況'
+      },
+      'creator' => {
+        atmosphere: custom_story&.dig('mood') || 'ドラマチック',
+        setting: custom_story&.dig('setting') || '未知の世界',
+        tone: custom_story&.dig('theme') || '冒険的な状況',
+        character: custom_story&.dig('character_background')
       }
     }
     
@@ -57,12 +63,25 @@ class OpenaiService
       CONTEXT
     end
     
+    # カスタム物語の情報を追加
+    custom_info = ""
+    if story_mode == 'creator' && custom_story
+      custom_info = <<~CUSTOM
+      
+      カスタム物語設定:
+      舞台: #{custom_story['setting']}
+      テーマ: #{custom_story['theme']}
+      雰囲気: #{custom_story['mood']}
+      #{custom_story['character_background'] ? "主人公の背景: #{custom_story['character_background']}" : ""}
+      CUSTOM
+    end
+    
     prompt = <<~PROMPT
       MBTI（Myers-Briggs Type Indicator）の性格診断テスト用の質問を1つ生成してください。
       
       物語モード: #{story[:atmosphere]}
       設定: #{story[:setting]}
-      雰囲気: #{story[:tone]}
+      雰囲気: #{story[:tone]}#{custom_info}
       
       次元: #{info[:name]}
       質問番号: #{question_number}
@@ -415,6 +434,118 @@ class OpenaiService
     rescue => _e
       nil
     end
+  end
+
+  def generate_personalized_story_report(answers, mbti_type, story_mode = 'adventure')
+    return nil if ENV['OPENAI_API_KEY'].blank?
+
+    # 物語モードに応じた設定
+    story_settings = {
+      'horror' => {
+        atmosphere: 'ホラー・スリラー',
+        narrative_style: '緊張感と恐怖感のある物語調',
+        context: '暗い夜道、古い屋敷、謎めいた出来事の世界'
+      },
+      'adventure' => {
+        atmosphere: 'アドベンチャー・冒険',
+        narrative_style: 'エキサイティングで冒険的な物語調',
+        context: '未知の土地、宝物探し、危険な挑戦の世界'
+      },
+      'mystery' => {
+        atmosphere: 'ミステリー・推理',
+        narrative_style: '推理と分析が必要な物語調',
+        context: '謎めいた事件、隠された真実、複雑な人間関係の世界'
+      }
+    }
+    
+    story = story_settings[story_mode] || story_settings['adventure']
+
+    # 回答履歴から物語の流れを構築
+    story_context = build_story_context_from_answers(answers, story_mode)
+    
+    prompt = <<~PROMPT
+      あなたは心理学者であり、物語作家でもあります。ユーザーの回答履歴を物語の文脈で分析し、なぜこのMBTIタイプと診断されたのかを具体的に解説してください。
+
+      診断結果: #{mbti_type}
+      物語モード: #{story[:atmosphere]}
+      物語の文脈: #{story[:context]}
+
+      ユーザーの回答履歴（物語の選択）:
+      #{story_context}
+
+      出力仕様（必ずこのJSONのみを出力、他の文字や注釈は一切含めない）:
+      {
+        "story_analysis": "物語の文脈に沿って、なぜこのタイプと診断されたのかを具体的に解説（例：'あなたはアドベンチャーの物語で常に仲間を優先する選択をしました。これはあなたの「感情(F)」の特性を強く示しています...'）日本語で300〜400文字",
+        "personality_insights": "回答パターンから見える性格の特徴や傾向を物語の選択として解説 日本語で200〜300文字",
+        "growth_suggestions": "このタイプの特性を活かした成長のヒントを物語の冒険者としてのアドバイス形式で 日本語で150〜250文字"
+      }
+    PROMPT
+
+    response = @client.chat(
+      parameters: {
+        model: "gpt-3.5-turbo",
+        messages: [
+          { 
+            role: "system", 
+            content: "あなたは心理学者で物語作家です。MBTIの専門知識と物語創作の才能を組み合わせて、ユーザーの回答を物語の文脈で分析し、説得力のある個人的なレポートを作成してください。常に指定のJSONのみで返答してください。" 
+          },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      }
+    )
+
+    content = response.dig("choices", 0, "message", "content")
+    return nil if content.nil?
+
+    begin
+      json_match = content.match(/\{[\s\S]*\}/)
+      json_str = json_match ? json_match[0] : content
+      data = JSON.parse(json_str)
+      { 
+        story_analysis: data["story_analysis"], 
+        personality_insights: data["personality_insights"],
+        growth_suggestions: data["growth_suggestions"]
+      }
+    rescue => _e
+      nil
+    end
+  end
+
+  private
+
+  def build_story_context_from_answers(answers, story_mode)
+    story_settings = {
+      'horror' => {
+        context_prefix: '暗い夜道で遭遇した状況',
+        choice_descriptions: {
+          'A' => '恐怖に立ち向かう選択',
+          'B' => '慎重に回避する選択'
+        }
+      },
+      'adventure' => {
+        context_prefix: '冒険の旅路で直面した選択',
+        choice_descriptions: {
+          'A' => '勇気ある行動',
+          'B' => '慎重な判断'
+        }
+      },
+      'mystery' => {
+        context_prefix: '謎めいた事件の調査過程',
+        choice_descriptions: {
+          'A' => '直感的な推理',
+          'B' => '論理的な分析'
+        }
+      }
+    }
+    
+    story = story_settings[story_mode] || story_settings['adventure']
+    
+    answers.each_with_index.map do |answer, i|
+      choice_desc = story[:choice_descriptions][answer[:choice]]
+      "#{i+1}. #{story[:context_prefix]}: #{answer[:question]}\n   あなたの選択: #{choice_desc} (#{answer[:choice] == 'A' ? answer[:optionA] : answer[:optionB]})"
+    end.join("\n")
   end
 
   def generate_fallback_single_question(dimension)

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物語の結末 - AIゲームマスター</title>
+  <%= stylesheet_link_tag 'mbti_common', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'mbti_game_master', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="ending-container">
+    <!-- ヘッダー -->
+    <div class="ending-header">
+      <div class="achievement-badge">
+        <h1>🏆 物語完結！</h1>
+        <p class="achievement-text"><%= @achievement %></p>
+      </div>
+    </div>
+
+    <!-- エンディングテキスト -->
+    <div class="ending-content">
+      <div class="ending-text">
+        <%= simple_format(@ending_text) %>
+      </div>
+    </div>
+
+    <!-- MBTI分析結果 -->
+    <div class="analysis-section">
+      <h2 class="analysis-title">🎭 あなたの性格分析</h2>
+      
+      <div class="mbti-result-card">
+        <div class="mbti-type-display">
+          <h3 class="mbti-type"><%= @result.mbti_type %></h3>
+          <p class="mbti-description"><%= @result.description %></p>
+        </div>
+      </div>
+
+      <div class="analysis-content">
+        <div class="analysis-item">
+          <h4>📊 MBTI分析</h4>
+          <p><%= @mbti_analysis %></p>
+        </div>
+
+        <div class="analysis-item">
+          <h4>🔍 性格の洞察</h4>
+          <p><%= @personality_insights %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 物語の振り返り -->
+    <div class="story-summary">
+      <h2 class="summary-title">📖 あなたの物語の軌跡</h2>
+      <div class="story-timeline">
+        <% @story_state['history']&.each_with_index do |choice, index| %>
+          <div class="timeline-item">
+            <div class="timeline-marker"><%= index + 1 %></div>
+            <div class="timeline-content">
+              <p><%= choice %></p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="ending-actions">
+      <a href="<%= mbti_game_master_path(story_mode: @mbti_session.story_mode) %>" class="action-button primary">新しい物語を始める</a>
+      <a href="<%= mbti_path %>" class="action-button secondary">通常の診断に戻る</a>
+      <button onclick="shareStory()" class="action-button secondary">物語を共有</button>
+    </div>
+
+    <!-- 共有セクション -->
+    <div class="share-section" id="share-section" style="display: none;">
+      <h3 class="share-title">物語を共有</h3>
+      <div class="share-text" id="share-text">
+        私のMBTIタイプは「<%= @result.mbti_type %>」です！<br>
+        <%= @result.description %><br><br>
+        AIゲームマスターによる物語診断で判明しました。<br>
+        あなたも体験してみませんか？<br>
+        <%= request.base_url %>/mbti/game_master
+      </div>
+      <button onclick="copyToClipboard()" class="copy-button">コピー</button>
+    </div>
+  </div>
+
+  <script>
+    // アニメーション効果
+    document.addEventListener('DOMContentLoaded', function() {
+      // エンディングテキストのフェードイン
+      const endingText = document.querySelector('.ending-text');
+      endingText.style.opacity = '0';
+      endingText.style.transform = 'translateY(30px)';
+      setTimeout(() => {
+        endingText.style.transition = 'all 1s ease';
+        endingText.style.opacity = '1';
+        endingText.style.transform = 'translateY(0)';
+      }, 500);
+
+      // タイムラインのアニメーション
+      const timelineItems = document.querySelectorAll('.timeline-item');
+      timelineItems.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateX(-30px)';
+        setTimeout(() => {
+          item.style.transition = 'all 0.5s ease';
+          item.style.opacity = '1';
+          item.style.transform = 'translateX(0)';
+        }, 1000 + (index * 200));
+      });
+    });
+
+    function shareStory() {
+      const shareSection = document.getElementById('share-section');
+      if (shareSection.style.display === 'none') {
+        shareSection.style.display = 'block';
+        shareSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        shareSection.style.display = 'none';
+      }
+    }
+
+    function copyToClipboard() {
+      const shareText = document.getElementById('share-text').textContent;
+      navigator.clipboard.writeText(shareText).then(function() {
+        alert('物語をコピーしました！');
+      }, function(err) {
+        console.error('コピーに失敗しました: ', err);
+        // フォールバック
+        const textArea = document.createElement('textarea');
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('物語をコピーしました！');
+      });
+    }
+  </script>
+  
+  <%= render 'shared/footer' %>
+</body>
+</html>

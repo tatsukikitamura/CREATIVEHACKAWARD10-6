@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MBTI性格診断テスト</title>
   <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
 </head>
 <body>
   <div class="container">
@@ -23,7 +24,11 @@
       </ul>
     </div>
 
-    <a href="<%= mbti_select_mode_path(session_id: @session_id) %>" class="start-button">診断を開始する</a>
+    <div class="start-section">
+      <a href="<%= mbti_mode_selection_path(session_id: @session_id) %>" class="start-button">診断を開始</a>
+    </div>
+
+    
 
     <div class="features">
       <div class="feature">
@@ -42,6 +47,9 @@
         <p>即座に結果を表示</p>
       </div>
     </div>
+
   </div>
+  
+  <%= render 'shared/footer' %>
 </body>
 </html>

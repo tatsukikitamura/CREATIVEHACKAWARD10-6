@@ -20,6 +20,28 @@ body {
   max-width: 600px;
   width: 100%;
   text-align: center;
+  margin: 0 auto;
+  
+  // 画面サイズに応じた動的なサイズ調整
+  @media (min-width: 1200px) {
+    max-width: 1000px;
+    padding: 50px;
+  }
+  
+  @media (min-width: 1400px) {
+    max-width: 1200px;
+    padding: 60px;
+  }
+  
+  @media (min-width: 1600px) {
+    max-width: 1400px;
+    padding: 70px;
+  }
+  
+  @media (min-width: 1920px) {
+    max-width: 1600px;
+    padding: 80px;
+  }
 }
 
 .btn {

@@ -61,7 +61,8 @@
       <a href="<%= mbti_resume_path(session_id: @mbti_session.session_id) %>" class="action-button continue-button">続きから再開する</a>
       <a href="<%= mbti_path %>" class="action-button">もう一度診断する</a>
       <button onclick="shareResult()" class="action-button secondary">結果を共有</button>
-      <button id="analyze-button" class="action-button secondary" data-session-id="<%= @mbti_session.session_id %>">さらに分析する</button>
+      <!-- <button id="analyze-button" class="action-button secondary" data-session-id="<%= @mbti_session.session_id %>">さらに分析する</button> -->
+      <button id="personalized-report-button" class="action-button primary" data-session-id="<%= @mbti_session.session_id %>">あなただけの詳細レポート</button>
     </div>
 
     <div class="share-section" id="share-section" style="display: none;">
@@ -154,6 +155,62 @@
             section.innerHTML = '<h2 class="scores-title">詳細分析</h2><div style="color:#c00;">分析に失敗しました。時間をおいて再度お試しください。</div>';
           }
         });
+      }
+
+      const personalizedReportBtn = document.getElementById('personalized-report-button');
+      if (personalizedReportBtn) {
+        personalizedReportBtn.addEventListener('click', async function() {
+          const sessionId = this.getAttribute('data-session-id');
+          const existing = document.getElementById('personalized-report-container');
+          if (existing) existing.remove();
+
+          const section = document.createElement('div');
+          section.id = 'personalized-report-container';
+          section.className = 'scores-container personalized-report';
+          section.innerHTML = '<h2 class="scores-title">🎭 あなただけの詳細レポート</h2><div class="loading">物語の文脈で分析中...</div>';
+          document.querySelector('.container').appendChild(section);
+          section.scrollIntoView({ behavior: 'smooth' });
+
+          try {
+            const res = await fetch('/mbti/personalized_report', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken()
+              },
+              body: JSON.stringify({ session_id: sessionId, type: '<%= @result.mbti_type %>' })
+            });
+            if (!res.ok) throw new Error('レポート生成に失敗しました');
+            const data = await res.json();
+            section.innerHTML = `
+              <h2 class=\"scores-title\">🎭 あなただけの詳細レポート（${data.mbti_type}）</h2>
+              <div class=\"story-mode-badge\">${getStoryModeLabel(data.story_mode)}</div>
+              <div class=\"report-section\">
+                <h3 class=\"report-section-title\">📖 物語でのあなたの選択分析</h3>
+                <div class=\"report-content\">${data.story_analysis || ''}</div>
+              </div>
+              <div class=\"report-section\">
+                <h3 class=\"report-section-title\">🔍 性格の洞察</h3>
+                <div class=\"report-content\">${data.personality_insights || ''}</div>
+              </div>
+              <div class=\"report-section\">
+                <h3 class=\"report-section-title\">🌟 成長のヒント</h3>
+                <div class=\"report-content\">${data.growth_suggestions || ''}</div>
+              </div>
+            `;
+          } catch (e) {
+            section.innerHTML = '<h2 class="scores-title">🎭 あなただけの詳細レポート</h2><div style="color:#c00;">レポート生成に失敗しました。時間をおいて再度お試しください。</div>';
+          }
+        });
+      }
+
+      function getStoryModeLabel(storyMode) {
+        const labels = {
+          'horror': 'ホラー・スリラー',
+          'adventure': 'アドベンチャー・冒険',
+          'mystery': 'ミステリー・推理'
+        };
+        return labels[storyMode] || 'アドベンチャー・冒険';
       }
     });
   </script>

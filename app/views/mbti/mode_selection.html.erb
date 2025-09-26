@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>診断モード選択 - MBTI性格診断テスト</title>
+  <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'mbti_mode_selection', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🧠</div>
+    <h1 class="title">診断モードを選択</h1>
+    <p class="subtitle">お好みの診断方式を選択してください</p>
+    
+    <div class="info-sections">
+      <div class="info-section">
+        <h2>🎮 診断モードについて</h2>
+        <div class="info-content">
+          <p>2つの診断方式からお選びいただけます。どちらも同じMBTI診断ですが、体験方法が異なります。</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mode-selection">
+      <div class="mode-option" onclick="selectMode('normal')">
+        <div class="mode-icon">📝</div>
+        <h2>通常モード</h2>
+        <p class="mode-description">従来の質問形式で、シンプルに診断を進めます</p>
+        <div class="mode-features">
+          <div class="feature-item">✅ シンプルな質問形式</div>
+          <div class="feature-item">✅ 短時間で完了（5-10分）</div>
+          <div class="feature-item">✅ 従来の診断スタイル</div>
+        </div>
+        <div class="mode-button">通常モードで開始</div>
+      </div>
+      
+      <div class="mode-option game-master-option" onclick="selectMode('game_master')">
+        <div class="mode-icon">🎭</div>
+        <h2>AIゲームマスター※実装中</h2>
+        <p class="mode-description">物語を体験しながら診断する革新的な方式</p>
+        <div class="mode-features">
+          <div class="feature-item">🎯 物語の目標を達成しながら診断</div>
+          <div class="feature-item">🎒 持ち物や選択履歴が物語に影響</div>
+          <div class="feature-item">📖 毎回異なる展開を体験</div>
+          <div class="feature-item">🏆 壮大なエンディングで結果発表</div>
+        </div>
+        <div class="mode-button">AIゲームマスターで開始</div>
+      </div>
+    </div>
+    
+    <div class="back-section">
+      <a href="<%= mbti_path %>" class="back-button">← 戻る</a>
+    </div>
+  </div>
+  
+  <%= render 'shared/footer' %>
+
+  <script>
+    function selectMode(mode) {
+      const sessionId = '<%= @session_id %>';
+      
+      if (mode === 'normal') {
+        // 通常モードの場合は物語モード選択に進む
+        window.location.href = '<%= mbti_select_mode_path(session_id: @session_id) %>';
+      } else if (mode === 'game_master') {
+        // AIゲームマスターモードの場合も通常と同じくモード選択へ。engine=gamemaster を付与
+        window.location.href = '<%= mbti_select_mode_path(session_id: @session_id) %>' + '&engine=gamemaster';
+      }
+    }
+
+    // アニメーション効果
+    document.addEventListener('DOMContentLoaded', function() {
+      const modeOptions = document.querySelectorAll('.mode-option');
+      modeOptions.forEach((option, index) => {
+        option.style.opacity = '0';
+        option.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+          option.style.transition = 'all 0.5s ease';
+          option.style.opacity = '1';
+          option.style.transform = 'translateY(0)';
+        }, index * 200);
+      });
+    });
+  </script>
+</body>
+</html>
