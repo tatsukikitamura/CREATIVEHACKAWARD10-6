@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物語クリエイター - MBTI診断</title>
+  <%= stylesheet_link_tag 'mbti_common', 'data-turbo-track': 'reload' %>
+  <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      padding: 2rem;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      margin: 2rem auto;
+    }
+
+    .logo {
+      font-size: 3rem;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      color: #333;
+      margin-bottom: 20px;
+      font-weight: 300;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: #666;
+      margin-bottom: 40px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .creator-form {
+      background: #f8f9fa;
+      border-radius: 15px;
+      padding: 2rem;
+      border-left: 5px solid #ff6b6b;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.8rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #ff6b6b;
+      box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .example-text {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+      text-decoration: none;
+      color: white;
+    }
+
+    .preview-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .preview-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .preview-content {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .preview-item {
+      margin-bottom: 1rem;
+    }
+
+    .preview-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .preview-value {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 1rem auto;
+        padding: 1.5rem;
+      }
+
+      .title {
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .btn-primary,
+      .btn-secondary {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">✨</div>
+    <h1 class="title">物語クリエイター</h1>
+    <p class="subtitle">あなただけのオリジナル診断物語を作成しましょう</p>
+    
+    <%= form_with url: mbti_create_story_path, method: :post, local: true, id: "creator-form" do |form| %>
+      <%= form.hidden_field :session_id, value: @session_id %>
+      
+      <div class="creator-form">
+        <div class="form-group">
+          <%= form.label :setting, "冒険の舞台", class: "form-label" %>
+          <%= form.text_field :setting, 
+              placeholder: "例：近未来の東京、魔法の王国、宇宙ステーション", 
+              class: "form-input",
+              id: "setting-input" %>
+          <div class="example-text">物語が展開する場所や時代を設定してください</div>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :theme, "テーマ・目標", class: "form-label" %>
+          <%= form.text_field :theme, 
+              placeholder: "例：失われた記憶を探す、古代の謎を解く、世界を救う", 
+              class: "form-input",
+              id: "theme-input" %>
+          <div class="example-text">主人公が達成すべき目標や探求するテーマを設定してください</div>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :mood, "物語の雰囲気", class: "form-label" %>
+          <%= form.select :mood, 
+              options_for_select([
+                ['ドラマチック', 'dramatic'],
+                ['ミステリアス', 'mysterious'],
+                ['アドベンチャー', 'adventure'],
+                ['ロマンチック', 'romantic'],
+                ['スリラー', 'thriller'],
+                ['コメディ', 'comedy']
+              ]), 
+              { prompt: "雰囲気を選択してください" },
+              { class: "form-input" } %>
+          <div class="example-text">物語全体の雰囲気やトーンを選択してください</div>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :character_background, "主人公の背景（任意）", class: "form-label" %>
+          <%= form.text_area :character_background, 
+              placeholder: "例：記憶を失った探偵、魔法学校の学生、宇宙飛行士", 
+              class: "form-input form-textarea",
+              id: "character-input" %>
+          <div class="example-text">主人公の職業や背景を設定すると、より個性的な物語になります</div>
+        </div>
+      </div>
+      
+      <div class="preview-section" id="preview-section" style="display: none;">
+        <div class="preview-title">📖 物語プレビュー</div>
+        <div class="preview-content">
+          <div class="preview-item">
+            <div class="preview-label">舞台：</div>
+            <div class="preview-value" id="preview-setting">-</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-label">テーマ：</div>
+            <div class="preview-value" id="preview-theme">-</div>
+          </div>
+          <div class="preview-item">
+            <div class="preview-label">雰囲気：</div>
+            <div class="preview-value" id="preview-mood">-</div>
+          </div>
+          <div class="preview-item" id="character-preview" style="display: none;">
+            <div class="preview-label">主人公：</div>
+            <div class="preview-value" id="preview-character">-</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-group">
+        <%= link_to "← 戻る", mbti_select_mode_path(session_id: @session_id), class: "btn-secondary" %>
+        <%= form.submit "物語を作成して診断開始", class: "btn-primary", id: "create-button" %>
+      </div>
+    <% end %>
+  </div>
+  
+  <%= render 'shared/footer' %>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const settingInput = document.getElementById('setting-input');
+      const themeInput = document.getElementById('theme-input');
+      const moodSelect = document.getElementById('mood');
+      const characterInput = document.getElementById('character-input');
+      const previewSection = document.getElementById('preview-section');
+      const createButton = document.getElementById('create-button');
+      
+      const moodLabels = {
+        'dramatic': 'ドラマチック',
+        'mysterious': 'ミステリアス',
+        'adventure': 'アドベンチャー',
+        'romantic': 'ロマンチック',
+        'thriller': 'スリラー',
+        'comedy': 'コメディ'
+      };
+      
+      function updatePreview() {
+        const setting = settingInput.value.trim();
+        const theme = themeInput.value.trim();
+        const mood = moodSelect.value;
+        const character = characterInput.value.trim();
+        
+        if (setting || theme || mood) {
+          previewSection.style.display = 'block';
+          
+          document.getElementById('preview-setting').textContent = setting || '未設定';
+          document.getElementById('preview-theme').textContent = theme || '未設定';
+          document.getElementById('preview-mood').textContent = mood ? moodLabels[mood] : '未設定';
+          
+          if (character) {
+            document.getElementById('character-preview').style.display = 'block';
+            document.getElementById('preview-character').textContent = character;
+          } else {
+            document.getElementById('character-preview').style.display = 'none';
+          }
+        } else {
+          previewSection.style.display = 'none';
+        }
+        
+        // 必須項目のチェック
+        const hasRequired = setting && theme && mood;
+        createButton.disabled = !hasRequired;
+        createButton.style.opacity = hasRequired ? '1' : '0.5';
+      }
+      
+      settingInput.addEventListener('input', updatePreview);
+      themeInput.addEventListener('input', updatePreview);
+      moodSelect.addEventListener('change', updatePreview);
+      characterInput.addEventListener('input', updatePreview);
+      
+      // 初期状態でプレビューを更新
+      updatePreview();
+    });
+  </script>
+</body>
+</html>

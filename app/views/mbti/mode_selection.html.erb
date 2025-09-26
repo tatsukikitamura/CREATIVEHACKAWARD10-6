@@ -65,8 +65,8 @@
         // 通常モードの場合は物語モード選択に進む
         window.location.href = '<%= mbti_select_mode_path(session_id: @session_id) %>';
       } else if (mode === 'game_master') {
-        // AIゲームマスターモードの場合は直接開始
-        window.location.href = '<%= mbti_game_master_path %>';
+        // AIゲームマスターモードの場合も通常と同じくモード選択へ。engine=gamemaster を付与
+        window.location.href = '<%= mbti_select_mode_path(session_id: @session_id) %>' + '&engine=gamemaster';
       }
     }
 

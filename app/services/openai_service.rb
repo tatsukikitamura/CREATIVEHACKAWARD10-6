@@ -6,7 +6,7 @@ class OpenaiService
     )
   end
 
-  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress)
+  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress, custom_story = nil)
     Rails.logger.info "Starting OpenAI API call for continuing story MBTI question generation"
     Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}, Mode: #{story_mode}, Progress: #{story_progress}"
     
@@ -42,6 +42,12 @@ class OpenaiService
         atmosphere: 'ミステリー・推理',
         setting: '謎めいた事件、隠された真実、複雑な人間関係',
         tone: '推理と分析が必要な状況'
+      },
+      'creator' => {
+        atmosphere: custom_story&.dig('mood') || 'ドラマチック',
+        setting: custom_story&.dig('setting') || '未知の世界',
+        tone: custom_story&.dig('theme') || '冒険的な状況',
+        character: custom_story&.dig('character_background')
       }
     }
     
@@ -57,12 +63,25 @@ class OpenaiService
       CONTEXT
     end
     
+    # カスタム物語の情報を追加
+    custom_info = ""
+    if story_mode == 'creator' && custom_story
+      custom_info = <<~CUSTOM
+      
+      カスタム物語設定:
+      舞台: #{custom_story['setting']}
+      テーマ: #{custom_story['theme']}
+      雰囲気: #{custom_story['mood']}
+      #{custom_story['character_background'] ? "主人公の背景: #{custom_story['character_background']}" : ""}
+      CUSTOM
+    end
+    
     prompt = <<~PROMPT
       MBTI（Myers-Briggs Type Indicator）の性格診断テスト用の質問を1つ生成してください。
       
       物語モード: #{story[:atmosphere]}
       設定: #{story[:setting]}
-      雰囲気: #{story[:tone]}
+      雰囲気: #{story[:tone]}#{custom_info}
       
       次元: #{info[:name]}
       質問番号: #{question_number}

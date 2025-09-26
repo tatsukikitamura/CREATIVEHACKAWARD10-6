@@ -1,5 +1,5 @@
 class MbtiController < ApplicationController
-  before_action :set_mbti_session, except: [:index, :mode_selection, :select_mode, :set_mode, :result, :game_master, :game_master_answer, :game_master_ending]
+  before_action :set_mbti_session, except: [:index, :mode_selection, :select_mode, :set_mode, :make_mode, :create_story, :result, :game_master, :game_master_answer, :game_master_ending]
   protect_from_forgery with: :exception
   # 二問目以降でCSRF検証が失敗する事象に対応するため、回答系のみ除外
   skip_forgery_protection only: [:answer, :back, :game_master_answer]
@@ -16,6 +16,7 @@ class MbtiController < ApplicationController
   def select_mode
     @session_id = params[:session_id]
     @modes = MbtiSession::STORY_MODES
+    @engine = params[:engine]
   end
 
   def set_mode
@@ -23,12 +24,50 @@ class MbtiController < ApplicationController
     @mbti_session = MbtiSession.find_or_create_by_session_id(params[:session_id])
     
     if params[:story_mode].present?
-      @mbti_session.update!(story_mode: params[:story_mode])
-      redirect_to mbti_show_path(session_id: @mbti_session.session_id)
+      if params[:story_mode] == 'creator'
+        redirect_to mbti_make_mode_path(session_id: @mbti_session.session_id)
+      else
+        # engine=gamemaster の場合はゲームマスターエンジンで開始
+        if params[:engine] == 'gamemaster'
+          @mbti_session.update!(story_mode: params[:story_mode])
+          redirect_to mbti_game_master_path(session_id: @mbti_session.session_id)
+        else
+          @mbti_session.update!(story_mode: params[:story_mode])
+          redirect_to mbti_show_path(session_id: @mbti_session.session_id)
+        end
+      end
     else
       flash[:alert] = "モードを選択してください。"
       redirect_to mbti_select_mode_path(session_id: params[:session_id])
     end
+  end
+
+  def make_mode
+    @session_id = params[:session_id]
+  end
+
+  def create_story
+    @mbti_session = MbtiSession.find_or_create_by_session_id(params[:session_id])
+    
+    # カスタム物語の設定を保存
+    custom_story = {
+      setting: params[:setting],
+      theme: params[:theme],
+      mood: params[:mood],
+      character_background: params[:character_background]
+    }
+    
+    # クリエイターモード開始時に進行をリセット
+    @mbti_session.update!(
+      story_mode: 'creator',
+      custom_story: custom_story,
+      questions: [],
+      answers: [],
+      current_question_index: 0,
+      completed: false
+    )
+    
+    redirect_to mbti_show_path(session_id: @mbti_session.session_id)
   end
 
   def show
@@ -374,7 +413,8 @@ class MbtiController < ApplicationController
       question_number, 
       story_mode, 
       last_answer, 
-      story_progress
+      story_progress,
+      @mbti_session.custom_story
     )
     
     if question

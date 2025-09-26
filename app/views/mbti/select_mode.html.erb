@@ -79,6 +79,40 @@
       font-style: italic;
     }
     
+    .creator-card {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+      color: white;
+      border: 3px solid #ff6b6b;
+    }
+    
+    .creator-card:hover {
+      background: linear-gradient(135deg, #ff5252 0%, #e64a19 100%);
+      border-color: #ff5252;
+    }
+    
+    .creator-card .mode-name {
+      color: white;
+      font-weight: 700;
+    }
+    
+    .creator-card .mode-description {
+      color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .creator-card .mode-example {
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+    
+    .creator-card.selected {
+      border-color: #ff6b6b;
+      background: linear-gradient(135deg, #ff5252 0%, #e64a19 100%);
+      box-shadow: 0 20px 40px rgba(255, 107, 107, 0.3);
+    }
+    
     .continue-button {
       background: linear-gradient(45deg, #667eea, #764ba2);
       color: white;
@@ -127,6 +161,9 @@
       <%= form_with url: mbti_set_mode_path, method: :post, local: true, id: "mode-form" do |form| %>
         <%= form.hidden_field :session_id, value: @session_id %>
         <%= form.hidden_field :story_mode, id: "selected-mode" %>
+        <% if params[:engine].present? %>
+          <%= form.hidden_field :engine, value: params[:engine] %>
+        <% end %>
         
         <div class="modes-grid">
           <div class="mode-card" data-mode="horror">
@@ -164,6 +201,18 @@
               例：「不可解な事件の手がかりを発見した時、あなたは...」
             </div>
           </div>
+          
+          <div class="mode-card creator-card" data-mode="creator">
+            <div class="mode-icon">✨</div>
+            <div class="mode-name">物語クリエイター</div>
+            <div class="mode-description">
+              あなただけのオリジナル物語を作成！<br>
+              舞台設定やテーマを自由に決めて、世界で一つだけの診断体験を。
+            </div>
+            <div class="mode-example">
+              例：「近未来の東京で失われた記憶を探す」
+            </div>
+          </div>
         </div>
         
         <button type="submit" class="continue-button" id="continue-button">
@@ -190,6 +239,15 @@
           // 選択されたモードを設定
           const mode = this.dataset.mode;
           selectedModeInput.value = mode;
+          
+          // クリエイターモードの場合は特別な処理
+          if (mode === 'creator') {
+            continueButton.textContent = '物語を作成する';
+            continueButton.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
+          } else {
+            continueButton.textContent = '選択したモードで診断を開始';
+            continueButton.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+          }
           
           // ボタンを有効化
           continueButton.classList.add('active');

@@ -55,6 +55,7 @@ class AiGameMasterService
     end
 
     prompt = build_game_master_prompt(story_state, story)
+    Rails.logger.info "[AI GM] Scene Prompt Generated:\n#{prompt}"
     
     response = @client.chat(
       parameters: {
@@ -105,6 +106,7 @@ class AiGameMasterService
     return generate_fallback_ending if ENV['OPENAI_API_KEY'].blank?
 
     prompt = build_ending_prompt(story_state)
+    Rails.logger.info "[AI GM] Ending Prompt Generated:\n#{prompt}"
     
     response = @client.chat(
       parameters: {

@@ -11,6 +11,8 @@ Rails.application.routes.draw do
   get 'mbti/mode_selection', to: 'mbti#mode_selection'
   get 'mbti/select_mode', to: 'mbti#select_mode'
   post 'mbti/set_mode', to: 'mbti#set_mode'
+  get 'mbti/make_mode', to: 'mbti#make_mode'
+  post 'mbti/create_story', to: 'mbti#create_story'
   get 'mbti/show', to: 'mbti#show'
   post 'mbti/answer', to: 'mbti#answer'
   post 'mbti/back', to: 'mbti#back'
