@@ -1,12 +1,16 @@
 class MbtiController < ApplicationController
-  before_action :set_mbti_session, except: [:index, :select_mode, :set_mode, :result]
+  before_action :set_mbti_session, except: [:index, :mode_selection, :select_mode, :set_mode, :result, :game_master, :game_master_answer, :game_master_ending]
   protect_from_forgery with: :exception
   # 二問目以降でCSRF検証が失敗する事象に対応するため、回答系のみ除外
-  skip_forgery_protection only: [:answer, :back]
+  skip_forgery_protection only: [:answer, :back, :game_master_answer]
   
   def index
     # 新しいセッションIDを生成
     @session_id = SecureRandom.uuid
+  end
+
+  def mode_selection
+    @session_id = params[:session_id]
   end
 
   def select_mode
@@ -163,6 +167,35 @@ class MbtiController < ApplicationController
     render json: { mbti_type: mbti_type, type_details: analysis[:type_details], answer_summary: analysis[:answer_summary] }
   end
 
+  def personalized_report
+    session_id = params[:session_id] || session[:mbti_session_id]
+    return render json: { error: 'invalid_session' }, status: :unprocessable_entity if session_id.blank?
+
+    mbti_session = MbtiSession.find_by(session_id: session_id)
+    return render json: { error: 'not_found' }, status: :not_found if mbti_session.nil?
+    return render json: { error: 'not_completed' }, status: :unprocessable_entity unless mbti_session.completed?
+
+    answers = mbti_session.answers_array
+    result = MbtiResult.calculate_mbti_type(answers)
+    mbti_type = params[:type].presence || result.mbti_type
+    story_mode = mbti_session.story_mode || 'adventure'
+
+    openai_service = OpenaiService.new
+    story_report = openai_service.generate_personalized_story_report(answers, mbti_type, story_mode)
+
+    if story_report.nil?
+      return render json: { error: 'report_unavailable' }, status: :service_unavailable
+    end
+
+    render json: { 
+      mbti_type: mbti_type, 
+      story_mode: story_mode,
+      story_analysis: story_report[:story_analysis], 
+      personality_insights: story_report[:personality_insights],
+      growth_suggestions: story_report[:growth_suggestions]
+    }
+  end
+
   def resume
     # セッションIDからセッションを取得
     session_id = params[:session_id]
@@ -183,6 +216,113 @@ class MbtiController < ApplicationController
     @mbti_session.update!(completed: false)
     
     redirect_to mbti_show_path(session_id: @mbti_session.session_id)
+  end
+
+  # AIゲームマスター方式のアクション
+  def game_master
+    # セッションIDを取得または新規作成
+    session_id = params[:session_id] || session[:mbti_session_id]
+    
+    if session_id.blank?
+      # 新しいセッションを作成
+      @mbti_session = MbtiSession.create!(
+        session_id: SecureRandom.uuid,
+        story_mode: params[:story_mode] || 'adventure',
+        completed: false,
+        story_state: {}
+      )
+      session[:mbti_session_id] = @mbti_session.session_id
+    else
+      @mbti_session = MbtiSession.find_by(session_id: session_id)
+      if @mbti_session.nil?
+        redirect_to mbti_path
+        return
+      end
+    end
+
+    # AIゲームマスターサービスを使用して場面を生成
+    ai_gm_service = AiGameMasterService.new
+    scene_data = ai_gm_service.generate_story_scene(@mbti_session.story_state, @mbti_session.story_mode)
+    
+    # セッションに場面データを保存
+    @mbti_session.update!(
+      story_state: @mbti_session.story_state.merge(
+        'current_scene' => scene_data,
+        'inventory' => (@mbti_session.story_state['inventory'] || []) + (scene_data[:inventory_updates] || []),
+        'flags' => (@mbti_session.story_state['flags'] || {}).merge(scene_data[:flag_updates] || {})
+      )
+    )
+
+    @scene_text = scene_data[:scene_text]
+    @question_dimension = scene_data[:question_dimension]
+    @choices = scene_data[:choices]
+    @progress = @mbti_session.story_state['progress'] || 0
+    @goal = @mbti_session.story_state['goal']
+    @inventory = @mbti_session.story_state['inventory'] || []
+  end
+
+  def game_master_answer
+    session_id = params[:session_id] || session[:mbti_session_id]
+    return redirect_to mbti_path if session_id.blank?
+
+    @mbti_session = MbtiSession.find_by(session_id: session_id)
+    return redirect_to mbti_path if @mbti_session.nil?
+
+    choice_value = params[:choice_value]
+    progress_impact = params[:progress_impact]&.to_i || 5
+
+    # AIゲームマスターサービスで選択を処理
+    ai_gm_service = AiGameMasterService.new
+    current_story_state = @mbti_session.story_state || {}
+    updated_story_state = ai_gm_service.process_player_choice(
+      current_story_state, 
+      choice_value, 
+      progress_impact
+    )
+
+    # セッションを更新
+    @mbti_session.update!(story_state: updated_story_state)
+
+    # エンディングに到達したかチェック
+    progress = updated_story_state['progress'] || 0
+    if progress >= 100
+      redirect_to mbti_game_master_ending_path(session_id: session_id)
+    else
+      redirect_to mbti_game_master_path(session_id: session_id)
+    end
+  end
+
+  def game_master_ending
+    session_id = params[:session_id] || session[:mbti_session_id]
+    return redirect_to mbti_path if session_id.blank?
+
+    @mbti_session = MbtiSession.find_by(session_id: session_id)
+    return redirect_to mbti_path if @mbti_session.nil?
+
+    # AIゲームマスターサービスでエンディングを生成
+    ai_gm_service = AiGameMasterService.new
+    ending_data = ai_gm_service.generate_ending(@mbti_session.story_state)
+
+    # 回答履歴からMBTIタイプを計算
+    answers = @mbti_session.story_state['history']&.map do |choice|
+      {
+        dimension: @mbti_session.story_state['current_scene']['question_dimension'],
+        choice: choice.include?('外向') ? 'A' : choice.include?('内向') ? 'B' : 
+                choice.include?('感覚') ? 'A' : choice.include?('直感') ? 'B' :
+                choice.include?('思考') ? 'A' : choice.include?('感情') ? 'B' :
+                choice.include?('計画') ? 'A' : choice.include?('柔軟') ? 'B' : 'A'
+      }
+    end || []
+
+    @result = MbtiResult.calculate_mbti_type(answers)
+    @ending_text = ending_data[:ending_text]
+    @mbti_analysis = ending_data[:mbti_analysis]
+    @personality_insights = ending_data[:personality_insights]
+    @achievement = ending_data[:achievement]
+    @story_state = @mbti_session.story_state
+
+    # セッションを完了状態にする
+    @mbti_session.update!(completed: true)
   end
 
   private
