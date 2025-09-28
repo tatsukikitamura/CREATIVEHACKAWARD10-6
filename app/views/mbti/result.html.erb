@@ -62,6 +62,7 @@
       <a href="<%= mbti_path %>" class="action-button">もう一度診断する</a>
       <button onclick="shareResult()" class="action-button secondary">結果を共有</button>
       <!-- <button id="analyze-button" class="action-button secondary" data-session-id="<%= @mbti_session.session_id %>">さらに分析する</button> -->
+      <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">🤖 AI診断で詳細分析</a>
       <button id="personalized-report-button" class="action-button primary" data-session-id="<%= @mbti_session.session_id %>">あなただけの詳細レポート</button>
     </div>
 

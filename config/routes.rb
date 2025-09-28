@@ -17,9 +17,11 @@ Rails.application.routes.draw do
   post 'mbti/answer', to: 'mbti#answer'
   post 'mbti/back', to: 'mbti#back'
   get 'mbti/result', to: 'mbti#result'
+  get 'mbti/result_ai', to: 'mbti#result_ai'
   get 'mbti/resume', to: 'mbti#resume'
   post 'mbti/analyze', to: 'mbti#analyze'
   post 'mbti/personalized_report', to: 'mbti#personalized_report'
+  post 'mbti/generate_image', to: 'mbti#generate_image'
   
   # AIゲームマスター方式のルート
   get 'mbti/game_master', to: 'mbti#game_master'

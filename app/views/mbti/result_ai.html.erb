@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI診断結果 - MBTI診断</title>
+  <%= stylesheet_link_tag 'mbti_result', 'data-turbo-track': 'reload' %>
+  <style>
+    .ai-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .ai-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    
+    .ai-title {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    
+    .ai-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .ai-analysis-section {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      border-left: 5px solid #667eea;
+    }
+    
+    .analysis-title {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .analysis-content {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #555;
+      white-space: pre-wrap;
+    }
+    
+    .mbti-type-display {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .mbti-type {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    
+    .mbti-description {
+      font-size: 1.2rem;
+      opacity: 0.9;
+    }
+    
+    .back-button {
+      background: #667eea;
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 2rem;
+    }
+    
+    .back-button:hover {
+      background: #5a6fd8;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error-message {
+      background: #fee;
+      color: #c33;
+      padding: 1rem;
+      border-radius: 10px;
+      border-left: 5px solid #c33;
+      margin: 1rem 0;
+    }
+    
+    /* 音楽セクションのスタイル */
+    .music-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .music-section {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .music-section h4 {
+      color: #333;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    
+    .music-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .music-list li {
+      background: white;
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+    
+    .music-list li:hover {
+      transform: translateY(-2px);
+    }
+    
+    .playlist-section {
+      margin-top: 2rem;
+    }
+    
+    .playlist-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .playlist-card h5 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .playlist-songs {
+      margin-top: 1rem;
+    }
+    
+    .song-item {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+    
+    /* 画像ギャラリーのスタイル */
+    .image-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .image-card {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    
+    .image-card h4 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+    
+    .image-card p {
+      color: #666;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    
+    .image-placeholder {
+      background: #f8f9fa;
+      border: 2px dashed #ddd;
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .image-placeholder img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .generate-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 1rem;
+      transition: all 0.3s ease;
+    }
+    
+    .generate-btn:hover {
+      background: #5a6fd8;
+      transform: translateY(-2px);
+    }
+    
+    .generate-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="ai-header">
+      <h1 class="ai-title">AI診断結果</h1>
+      <p class="ai-subtitle">人工知能による詳細な性格分析</p>
+    </div>
+
+    <div class="mbti-type-display">
+      <h2 class="mbti-type"><%= @result.mbti_type %></h2>
+      <p class="mbti-description"><%= @result.description %></p>
+    </div>
+
+    <!-- 音楽提案セクション -->
+      <h3 class="analysis-title">
+        <span>🎵</span>
+        あなたに合う音楽
+      </h3>
+      
+      <% if @music_recommendations %>
+        <div class="music-content">
+          <div class="music-section">
+            <h4>🎶 おすすめジャンル</h4>
+            <ul class="music-list">
+              <% @music_recommendations[:genres]&.each do |genre| %>
+                <li><%= genre %></li>
+              <% end %>
+            </ul>
+          </div>
+          
+          <div class="music-section">
+            <h4>🎤 おすすめアーティスト</h4>
+            <ul class="music-list">
+              <% @music_recommendations[:artists]&.each do |artist| %>
+                <li><%= artist %></li>
+              <% end %>
+            </ul>
+          </div>
+          
+          <div class="music-section">
+            <h4>🎼 おすすめ楽曲</h4>
+            <ul class="music-list">
+              <% @music_recommendations[:songs]&.each do |song| %>
+                <li><%= song %></li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+      
+      <% if @playlist_info %>
+        <div class="playlist-section">
+          <h4>🎧 あなた専用プレイリスト</h4>
+          <div class="playlist-card">
+            <h5><%= @playlist_info[:title] %></h5>
+            <p><%= @playlist_info[:description] %></p>
+            <div class="playlist-songs">
+              <% @playlist_info[:songs]&.each do |song| %>
+                <div class="song-item">🎵 <%= song %></div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    
+
+    <!-- 画像生成セクション -->
+      <h3 class="analysis-title">
+      <br>
+        <span>🎨</span>
+        あなたを表現する画像
+      </h3>
+      
+      <div class="image-gallery">
+        <% if @image_prompts && @image_prompts[:prompts] %>
+          <% @image_prompts[:prompts].each_with_index do |prompt_data, index| %>
+            <div class="image-card">
+              <h4><%= prompt_data[:title] %></h4>
+              <p><%= prompt_data[:description] %></p>
+              <div class="image-placeholder" id="image-<%= index %>">
+                <button class="generate-btn" onclick="generateImage('<%= prompt_data[:prompt].gsub("'", "\\'") %>', <%= index %>)">
+                  画像を生成
+                </button>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="error-message">
+            画像プロンプトの生成に失敗しました。
+          </div>
+        <% end %>
+      </div>
+
+    <div style="text-align: center;">
+      <a href="<%= mbti_result_path(session_id: @mbti_session.session_id) %>" class="back-button">
+        ← 通常の結果に戻る
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // ページ読み込み時のアニメーション
+    document.addEventListener('DOMContentLoaded', function() {
+      const sections = document.querySelectorAll('.ai-analysis-section');
+      sections.forEach((section, index) => {
+        section.style.opacity = '0';
+        section.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          section.style.transition = 'all 0.6s ease';
+          section.style.opacity = '1';
+          section.style.transform = 'translateY(0)';
+        }, index * 200);
+      });
+    });
+
+    // 画像生成関数
+    async function generateImage(prompt, index) {
+      const placeholder = document.getElementById(`image-${index}`);
+      
+      // ローディング表示に切り替え
+      placeholder.innerHTML = `
+        <div class="loading-spinner"></div>
+        <p>画像を生成中...</p>
+      `;
+      
+      try {
+        // プロンプトの前後の引用符を削除
+        const cleanPrompt = prompt.replace(/^["']|["']$/g, '').trim();
+        
+        const response = await fetch('/mbti/generate_image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: JSON.stringify({ prompt: cleanPrompt })
+        });
+        
+        if (!response.ok) {
+          throw new Error('画像生成に失敗しました');
+        }
+        
+        const data = await response.json();
+        
+        if (data.image_url) {
+          // 画像を表示
+          placeholder.innerHTML = `
+            <img src="${data.image_url}" alt="Generated image" />
+            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+              AIが生成した画像
+            </p>
+          `;
+        } else {
+          throw new Error('画像URLが取得できませんでした');
+        }
+      } catch (error) {
+        console.error('Image generation error:', error);
+        placeholder.innerHTML = `
+          <div style="color: #c33; text-align: center;">
+            <p>❌ 画像生成に失敗しました</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">${error.message}</p>
+            <button class="generate-btn" onclick="generateImage('${prompt}', ${index})">
+              再試行
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // 音楽プレイリストの再生（デモ用）
+    function playPlaylist() {
+      alert('音楽プレイリストの再生機能は、実際の音楽サービスとの連携が必要です。\n\nおすすめの楽曲を音楽アプリで検索してみてください！');
+    }
+  </script>
+</body>
+</html>

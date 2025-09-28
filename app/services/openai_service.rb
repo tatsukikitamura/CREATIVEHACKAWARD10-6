@@ -6,6 +6,10 @@ class OpenaiService
     )
   end
 
+  def client
+    @client
+  end
+
   def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress, custom_story = nil)
     Rails.logger.info "Starting OpenAI API call for continuing story MBTI question generation"
     Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}, Mode: #{story_mode}, Progress: #{story_progress}"

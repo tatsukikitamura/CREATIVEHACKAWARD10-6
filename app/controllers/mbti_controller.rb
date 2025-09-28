@@ -184,6 +184,52 @@ class MbtiController < ApplicationController
     # @mbti_session.destroy
   end
 
+  def result_ai
+    # セッションIDからセッションを取得
+    session_id = params[:session_id] || session[:mbti_session_id]
+    
+    if session_id.blank?
+      redirect_to mbti_path
+      return
+    end
+    
+    @mbti_session = MbtiSession.find_by(session_id: session_id)
+    
+    if @mbti_session.nil? || !@mbti_session.completed?
+      redirect_to mbti_path
+      return
+    end
+    
+    @answers = @mbti_session.answers_array
+    
+    if @answers.empty?
+      redirect_to mbti_path
+      return
+    end
+
+    # 回答数を取得
+    @answer_count = @answers.length
+    
+    # MBTIタイプを計算
+    @result = MbtiResult.calculate_mbti_type(@answers)
+    
+    # AI診断の詳細分析を生成
+    #openai_service = OpenaiService.new
+    #@ai_analysis = openai_service.generate_detailed_analysis(@answers, @result.mbti_type)
+    
+    # AI音楽サービスで音楽提案を生成
+    ai_music_service = AiMusicService.new
+    @music_recommendations = ai_music_service.generate_music_recommendations(@result.mbti_type, @answers)
+    @playlist_info = ai_music_service.generate_playlist_info(@result.mbti_type, @answers)
+    
+    # AI画像サービスで画像プロンプトを生成
+    ai_photo_service = AiPhotoService.new
+    @image_prompts = ai_photo_service.generate_image_prompts(@result.mbti_type, @answers)
+    
+    # デフォルト画像プロンプトも取得（DALL-Eが利用できない場合のフォールバック）
+    @default_image_prompts = ai_photo_service.get_default_prompts_for_type(@result.mbti_type)
+  end
+
   def analyze
     session_id = params[:session_id] || session[:mbti_session_id]
     return render json: { error: 'invalid_session' }, status: :unprocessable_entity if session_id.blank?
@@ -233,6 +279,23 @@ class MbtiController < ApplicationController
       personality_insights: story_report[:personality_insights],
       growth_suggestions: story_report[:growth_suggestions]
     }
+  end
+
+  def generate_image
+    prompt = params[:prompt]
+    return render json: { error: 'prompt_required' }, status: :bad_request if prompt.blank?
+
+    # プロンプトの前後の引用符を削除
+    prompt = prompt.gsub(/^["']|["']$/, '').strip
+
+    ai_photo_service = AiPhotoService.new
+    image_url = ai_photo_service.generate_image_with_dalle(prompt)
+
+    if image_url
+      render json: { image_url: image_url }
+    else
+      render json: { error: 'image_generation_failed' }, status: :service_unavailable
+    end
   end
 
   def resume
