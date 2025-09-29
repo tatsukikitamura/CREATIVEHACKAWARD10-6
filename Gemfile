@@ -11,6 +11,10 @@ gem "sprockets-rails"
 # SCSS compiler
 gem "sassc-rails"
 
+
+group :development, :test do
+  gem 'bundler-audit', require: false
+end
 # Use sqlite3 as the database for Active Record
 group :development, :test do
   gem "sqlite3", "~> 1.4"
