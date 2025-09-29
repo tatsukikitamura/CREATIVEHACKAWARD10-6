@@ -217,17 +217,7 @@ class MbtiController < ApplicationController
     #openai_service = OpenaiService.new
     #@ai_analysis = openai_service.generate_detailed_analysis(@answers, @result.mbti_type)
     
-    # AI音楽サービスで音楽提案を生成
-    ai_music_service = AiMusicService.new
-    @music_recommendations = ai_music_service.generate_music_recommendations(@result.mbti_type, @answers)
-    @playlist_info = ai_music_service.generate_playlist_info(@result.mbti_type, @answers)
-    
-    # AI画像サービスで画像プロンプトを生成
-    ai_photo_service = AiPhotoService.new
-    @image_prompts = ai_photo_service.generate_image_prompts(@result.mbti_type, @answers)
-    
-    # デフォルト画像プロンプトも取得（DALL-Eが利用できない場合のフォールバック）
-    @default_image_prompts = ai_photo_service.get_default_prompts_for_type(@result.mbti_type)
+    # 音楽と画像はボタンが押されたときに生成されるため、ここでは生成しない
   end
 
   def analyze
@@ -297,6 +287,40 @@ class MbtiController < ApplicationController
       render json: { error: 'image_generation_failed' }, status: :service_unavailable
     end
   end
+
+  def generate_music
+    session_id = params[:session_id] || session[:mbti_session_id]
+    return render json: { error: 'invalid_session' }, status: :unprocessable_entity if session_id.blank?
+
+    mbti_session = MbtiSession.find_by(session_id: session_id)
+    return render json: { error: 'not_found' }, status: :not_found if mbti_session.nil?
+    return render json: { error: 'not_completed' }, status: :unprocessable_entity unless mbti_session.completed?
+
+    answers = mbti_session.answers_array
+    result = MbtiResult.calculate_mbti_type(answers)
+
+    # AI音楽サービスで音楽提案を生成（物語の設定も含める）
+    ai_music_service = AiMusicService.new
+    music_recommendations = ai_music_service.generate_music_recommendations(
+      result.mbti_type, 
+      answers, 
+      mbti_session.story_mode, 
+      mbti_session.custom_story
+    )
+    playlist_info = ai_music_service.generate_playlist_info(
+      result.mbti_type, 
+      answers, 
+      mbti_session.story_mode, 
+      mbti_session.custom_story
+    )
+
+    render json: { 
+      music_recommendations: music_recommendations,
+      playlist_info: playlist_info
+    }
+  end
+
+
 
   def resume
     # セッションIDからセッションを取得

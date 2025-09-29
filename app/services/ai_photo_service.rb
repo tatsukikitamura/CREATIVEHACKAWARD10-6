@@ -9,7 +9,7 @@ class AiPhotoService
       prompt = build_image_prompt(mbti_type, answers)
       response = @openai_service.client.chat(
         parameters: {
-          model: "gpt-4",
+          model: "gpt-3.5-turbo",
           messages: [
             {
               role: "system",
@@ -21,7 +21,7 @@ class AiPhotoService
             }
           ],
           max_tokens: 800,
-          temperature: 0.8
+          temperature: 0.9
         }
       )
 
@@ -42,6 +42,7 @@ class AiPhotoService
       
       response = @openai_service.client.images.generate(
         parameters: {
+          model: "dall-e-2",
           prompt: prompt,
           size: size,
           n: 1
@@ -85,85 +86,85 @@ class AiPhotoService
   # MBTIタイプに基づくデフォルト画像プロンプト
   def get_default_prompts_for_type(mbti_type)
     type_prompts = {
-      'INTJ' => [
-        "Strategic thinker in a modern office, focused and analytical, dark blue tones",
-        "Mountain peak at sunrise, representing vision and determination",
-        "Person reading complex charts and graphs, surrounded by books"
-      ],
+        'INTJ' => [
+          "Abstract geometric patterns representing strategic thinking, dark blue and silver tones, analytical precision",
+          "Mountain peak silhouette at sunrise, symbolic of vision and determination, minimalist composition",
+          "Floating geometric shapes and mathematical symbols, representing complex analysis and knowledge"
+        ],
       'INTP' => [
-        "Abstract geometric patterns, representing logical thinking, purple and blue",
-        "Library with ancient books and modern technology, mysterious atmosphere",
-        "Person working on complex puzzle or code, deep in thought"
+        "Abstract geometric patterns representing logical thinking, purple and blue tones, mathematical precision",
+        "Floating books and digital elements in mysterious atmosphere, conceptual knowledge representation",
+        "Abstract puzzle pieces and code fragments floating in space, representing deep analytical thought"
       ],
       'ENTJ' => [
-        "Leader addressing a crowd, confident and commanding, red and gold tones",
-        "City skyline at sunset, representing ambition and success",
-        "Person in business suit making important decisions"
+        "Abstract power symbols and commanding geometric shapes, red and gold tones, leadership energy",
+        "City skyline silhouette at sunset, representing ambition and success, minimalist urban composition",
+        "Floating decision-making symbols and abstract business elements, representing strategic authority"
       ],
       'ENTP' => [
-        "Colorful brainstorming session, creative and energetic, bright colors",
-        "Innovative cityscape with futuristic buildings, dynamic and creative",
-        "Person presenting new ideas with enthusiasm and energy"
+        "Abstract explosion of creative energy, colorful geometric shapes and dynamic patterns, bright vibrant colors",
+        "Futuristic abstract cityscape with innovative architectural elements, dynamic and creative composition",
+        "Floating light bulbs and idea symbols in energetic motion, representing enthusiastic innovation"
       ],
       'INFJ' => [
-        "Gentle light through trees, representing insight and wisdom, soft green tones",
-        "Peaceful garden with flowing water, serene and contemplative",
-        "Person helping others, compassionate and understanding"
+        "Abstract gentle light patterns through organic shapes, representing insight and wisdom, soft green and gold tones",
+        "Flowing abstract water patterns and peaceful garden elements, serene and contemplative composition",
+        "Floating heart symbols and helping hands in abstract form, representing compassion and understanding"
       ],
       'INFP' => [
-        "Dreamy watercolor painting, artistic and emotional, pastel colors",
-        "Magical forest with soft lighting, imaginative and whimsical",
-        "Person creating art or writing, expressing inner feelings"
+        "Abstract dreamy watercolor patterns, artistic and emotional, soft pastel colors flowing together",
+        "Magical abstract forest elements with soft ethereal lighting, imaginative and whimsical composition",
+        "Floating artistic tools and creative symbols, representing inner emotional expression and artistic soul"
       ],
       'ENFJ' => [
-        "Warm community gathering, people connecting and supporting each other",
-        "Sunrise over a community, representing hope and inspiration",
-        "Person teaching or mentoring others, caring and encouraging"
+        "Abstract warm community symbols and connecting elements, representing support and togetherness",
+        "Sunrise abstract patterns over community silhouettes, representing hope and inspiration",
+        "Floating teaching and mentoring symbols, representing caring guidance and encouragement"
       ],
       'ENFP' => [
-        "Explosion of colors and creativity, energetic and spontaneous",
-        "Adventure scene with multiple paths, exciting and open",
-        "Person exploring new places with excitement and curiosity"
+        "Abstract explosion of vibrant colors and creative energy, spontaneous and dynamic patterns",
+        "Multiple abstract paths and adventure symbols, exciting and open exploration composition",
+        "Floating exploration symbols and curiosity elements, representing excitement and discovery"
       ],
       'ISTJ' => [
-        "Organized workspace with everything in perfect order, reliable and structured",
-        "Stable mountain landscape, solid and dependable",
-        "Person methodically completing tasks with precision"
+        "Abstract organized geometric patterns, representing perfect order and structure, reliable and methodical",
+        "Stable abstract mountain silhouettes, solid and dependable composition, minimalist landscape",
+        "Floating task completion symbols and precision elements, representing methodical work and reliability"
       ],
       'ISFJ' => [
-        "Cozy home environment, caring and nurturing, warm earth tones",
-        "Gentle garden with blooming flowers, peaceful and supportive",
-        "Person taking care of others with love and attention"
+        "Abstract cozy home symbols and nurturing elements, caring and warm earth tones",
+        "Gentle abstract garden patterns with blooming flower elements, peaceful and supportive composition",
+        "Floating care symbols and love elements, representing nurturing attention and support"
       ],
       'ESTJ' => [
-        "Efficient office environment, organized and productive, professional tones",
-        "Well-planned city with clear structure, reliable and systematic",
-        "Person leading a team meeting with authority and competence"
+        "Abstract efficient office symbols and productive elements, organized and professional tones",
+        "Well-planned abstract city patterns with clear structure, reliable and systematic composition",
+        "Floating leadership symbols and authority elements, representing competence and team management"
       ],
       'ESFJ' => [
-        "Happy family gathering, social and caring, warm and inviting",
-        "Community celebration, joyful and supportive atmosphere",
-        "Person organizing events and bringing people together"
+        "Abstract happy family symbols and social elements, caring and warm inviting atmosphere",
+        "Community celebration patterns and joyful elements, supportive and festive composition",
+        "Floating event organization symbols and connection elements, representing bringing people together"
       ],
       'ISTP' => [
-        "Technical workshop with tools and machinery, practical and hands-on",
-        "Adventure sports scene, independent and action-oriented",
-        "Person fixing or building something with skill and focus"
+        "Abstract technical workshop symbols and tool elements, practical and hands-on mechanical patterns",
+        "Adventure sports abstract symbols, independent and action-oriented dynamic composition",
+        "Floating building and fixing symbols, representing skill and focused craftsmanship"
       ],
       'ISFP' => [
-        "Artistic studio with creative works, sensitive and aesthetic",
-        "Natural landscape with artistic elements, peaceful and beautiful",
-        "Person creating something beautiful with care and attention"
+        "Abstract artistic studio elements and creative symbols, sensitive and aesthetic composition",
+        "Natural abstract landscape patterns with artistic elements, peaceful and beautiful organic forms",
+        "Floating beauty creation symbols and care elements, representing artistic attention and aesthetic focus"
       ],
       'ESTP' => [
-        "Dynamic action scene, energetic and spontaneous, bold colors",
-        "Adventure sports or outdoor activities, exciting and active",
-        "Person taking immediate action with confidence and energy"
+        "Abstract dynamic action patterns, energetic and spontaneous, bold vibrant colors",
+        "Adventure sports abstract symbols and outdoor elements, exciting and active composition",
+        "Floating action symbols and energy elements, representing immediate confident movement"
       ],
       'ESFP' => [
-        "Vibrant party or celebration, fun-loving and social, bright colors",
-        "Festive outdoor scene, joyful and energetic",
-        "Person entertaining others with enthusiasm and charm"
+        "Abstract vibrant party symbols and celebration elements, fun-loving and social bright colors",
+        "Festive abstract outdoor patterns, joyful and energetic composition",
+        "Floating entertainment symbols and charm elements, representing enthusiasm and social energy"
       ]
     }
 
@@ -174,17 +175,17 @@ class AiPhotoService
         {
           title: "抽象的な表現",
           description: "あなたの性格を抽象的に表現",
-          prompt: prompts[0]
+          prompt: "#{prompts[0]}. Abstract, symbolic, conceptual, artistic representation."
         },
         {
           title: "自然・風景での表現", 
           description: "あなたの性格を自然で表現",
-          prompt: prompts[1]
+          prompt: "#{prompts[1]}. Abstract, symbolic, conceptual, artistic representation."
         },
         {
           title: "日常シーンでの表現",
           description: "あなたの性格を日常で表現",
-          prompt: prompts[2]
+          prompt: "#{prompts[2]}. Abstract, symbolic, conceptual, artistic representation."
         }
       ]
     }
@@ -212,6 +213,12 @@ class AiPhotoService
       
       各プロンプトは英語で、DALL-Eで生成可能な形式で記述してください。
       プロンプトは具体的で、視覚的に魅力的な画像を生成できるようにしてください。
+      
+      【重要】画像生成の制約事項：
+      - 抽象的な表現を重視し、具体的な物体や人物よりも概念的な視覚表現を心がけてください
+      - 色彩、形状、質感、光と影の効果を活用して感情や性格を表現してください
+      - 象徴的で詩的なイメージを生成し、直感的に理解できる視覚的メタファーを重視してください
+      - プロンプトの最後に必ず「Abstract, symbolic, conceptual, artistic representation」を追加してください
     PROMPT
   end
 
@@ -225,10 +232,12 @@ class AiPhotoService
     lines.each do |line|
       if line.start_with?("##")
         if current_prompt && current_title
+          # プロンプトに抽象的な表現のルールを自動追加
+          enhanced_prompt = "#{current_prompt.strip}. Abstract, symbolic, conceptual, artistic representation."
           prompts << {
             title: current_title,
             description: current_description,
-            prompt: current_prompt.strip
+            prompt: enhanced_prompt
           }
         end
         
@@ -246,10 +255,12 @@ class AiPhotoService
     
     # 最後のプロンプトを追加
     if current_prompt && current_title
+      # プロンプトに抽象的な表現のルールを自動追加
+      enhanced_prompt = "#{current_prompt.strip}. Abstract, symbolic, conceptual, artistic representation."
       prompts << {
         title: current_title,
         description: current_description,
-        prompt: current_prompt.strip
+        prompt: enhanced_prompt
       }
     end
     
