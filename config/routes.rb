@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   post 'mbti/analyze', to: 'mbti#analyze'
   post 'mbti/personalized_report', to: 'mbti#personalized_report'
   post 'mbti/generate_image', to: 'mbti#generate_image'
+  post 'mbti/generate_music', to: 'mbti#generate_music'
   
   # AIゲームマスター方式のルート
   get 'mbti/game_master', to: 'mbti#game_master'

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<%= form_authenticity_token %>">
   <title>AI診断結果 - MBTI診断</title>
   <%= stylesheet_link_tag 'mbti_result', 'data-turbo-track': 'reload' %>
   <style>
@@ -191,6 +192,22 @@
       backdrop-filter: blur(10px);
     }
     
+    /* 音楽プレースホルダーのスタイル */
+    .music-placeholder {
+      background: #f8f9fa;
+      border: 2px dashed #667eea;
+      border-radius: 15px;
+      padding: 3rem;
+      text-align: center;
+      margin: 2rem 0;
+      transition: all 0.3s ease;
+    }
+    
+    .music-placeholder:hover {
+      border-color: #5a6fd8;
+      background: #f0f2ff;
+    }
+    
     /* 画像ギャラリーのスタイル */
     .image-gallery {
       display: grid;
@@ -274,84 +291,61 @@
     </div>
 
     <!-- 音楽提案セクション -->
+    
       <h3 class="analysis-title">
         <span>🎵</span>
         あなたに合う音楽
       </h3>
       
-      <% if @music_recommendations %>
-        <div class="music-content">
-          <div class="music-section">
-            <h4>🎶 おすすめジャンル</h4>
-            <ul class="music-list">
-              <% @music_recommendations[:genres]&.each do |genre| %>
-                <li><%= genre %></li>
-              <% end %>
-            </ul>
-          </div>
-          
-          <div class="music-section">
-            <h4>🎤 おすすめアーティスト</h4>
-            <ul class="music-list">
-              <% @music_recommendations[:artists]&.each do |artist| %>
-                <li><%= artist %></li>
-              <% end %>
-            </ul>
-          </div>
-          
-          <div class="music-section">
-            <h4>🎼 おすすめ楽曲</h4>
-            <ul class="music-list">
-              <% @music_recommendations[:songs]&.each do |song| %>
-                <li><%= song %></li>
-              <% end %>
-            </ul>
-          </div>
-        </div>
-      <% end %>
-      
-      <% if @playlist_info %>
-        <div class="playlist-section">
-          <h4>🎧 あなた専用プレイリスト</h4>
-          <div class="playlist-card">
-            <h5><%= @playlist_info[:title] %></h5>
-            <p><%= @playlist_info[:description] %></p>
-            <div class="playlist-songs">
-              <% @playlist_info[:songs]&.each do |song| %>
-                <div class="song-item">🎵 <%= song %></div>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      <% end %>
+      <div  id="music-content">
+        <button class="generate-btn" onclick="generateMusic()">
+          音楽を生成
+        </button>
+      </div>
+      <br>
+      <br>
+  
     
 
     <!-- 画像生成セクション -->
+    <div class="image-section">
       <h3 class="analysis-title">
-      <br>
         <span>🎨</span>
-        あなたを表現する画像
+        あなたに合う画像
       </h3>
       
       <div class="image-gallery">
-        <% if @image_prompts && @image_prompts[:prompts] %>
-          <% @image_prompts[:prompts].each_with_index do |prompt_data, index| %>
-            <div class="image-card">
-              <h4><%= prompt_data[:title] %></h4>
-              <p><%= prompt_data[:description] %></p>
-              <div class="image-placeholder" id="image-<%= index %>">
-                <button class="generate-btn" onclick="generateImage('<%= prompt_data[:prompt].gsub("'", "\\'") %>', <%= index %>)">
-                  画像を生成
-                </button>
-              </div>
-            </div>
-          <% end %>
-        <% else %>
-          <div class="error-message">
-            画像プロンプトの生成に失敗しました。
+        <div class="image-card">
+          <h4>抽象的な表現</h4>
+          <p>あなたの性格を抽象的なアートで表現します</p>
+          <div class="image-placeholder" id="image-abstract">
+            <button class="generate-btn" onclick="generateImage('abstract', 0)">
+              画像を生成
+            </button>
           </div>
-        <% end %>
+        </div>
+        
+        <div class="image-card">
+          <h4>自然・風景での表現</h4>
+          <p>あなたの性格を自然や風景で表現します</p>
+          <div class="image-placeholder" id="image-nature">
+            <button class="generate-btn" onclick="generateImage('nature', 1)">
+              画像を生成
+            </button>
+          </div>
+        </div>
+        
+        <div class="image-card">
+          <h4>日常シーンでの表現</h4>
+          <p>あなたの性格を日常のシーンで表現します</p>
+          <div class="image-placeholder" id="image-daily">
+            <button class="generate-btn" onclick="generateImage('daily', 2)">
+              画像を生成
+            </button>
+          </div>
+        </div>
       </div>
+    </div>
 
     <div style="text-align: center;">
       <a href="<%= mbti_result_path(session_id: @mbti_session.session_id) %>" class="back-button">
@@ -376,8 +370,8 @@
     });
 
     // 画像生成関数
-    async function generateImage(prompt, index) {
-      const placeholder = document.getElementById(`image-${index}`);
+    async function generateImage(category, index) {
+      const placeholder = document.getElementById(`image-${category}`);
       
       // ローディング表示に切り替え
       placeholder.innerHTML = `
@@ -386,8 +380,8 @@
       `;
       
       try {
-        // プロンプトの前後の引用符を削除
-        const cleanPrompt = prompt.replace(/^["']|["']$/g, '').trim();
+        // カテゴリに応じたプロンプトを生成
+        const prompt = await generateImagePrompt(category);
         
         const response = await fetch('/mbti/generate_image', {
           method: 'POST',
@@ -395,7 +389,7 @@
             'Content-Type': 'application/json',
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
           },
-          body: JSON.stringify({ prompt: cleanPrompt })
+          body: JSON.stringify({ prompt: prompt })
         });
         
         if (!response.ok) {
@@ -408,9 +402,6 @@
           // 画像を表示
           placeholder.innerHTML = `
             <img src="${data.image_url}" alt="Generated image" />
-            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
-              AIが生成した画像
-            </p>
           `;
         } else {
           throw new Error('画像URLが取得できませんでした');
@@ -421,13 +412,191 @@
           <div style="color: #c33; text-align: center;">
             <p>❌ 画像生成に失敗しました</p>
             <p style="font-size: 0.9rem; margin-top: 0.5rem;">${error.message}</p>
-            <button class="generate-btn" onclick="generateImage('${prompt}', ${index})">
+            <button class="generate-btn" onclick="generateImage('${category}', ${index})">
               再試行
             </button>
           </div>
         `;
       }
     }
+
+    // カテゴリに応じた画像プロンプトを生成
+    async function generateImagePrompt(category) {
+      const mbtiType = '<%= @result.mbti_type %>';
+      const description = '<%= @result.description %>';
+      const storyMode = '<%= @mbti_session.story_mode %>';
+      const customStory = <%= raw @mbti_session.custom_story&.to_json || 'null' %>;
+      const answers = <%= raw @answers.to_json %>;
+      
+      // 回答履歴から物語の文脈を構築
+      const storyContext = buildStoryContext(answers, storyMode, customStory);
+      
+      const categoryPrompts = {
+        'abstract': `Create an abstract artistic representation based on this story context: ${storyContext}. MBTI Type: ${mbtiType} (${description}). Use abstract shapes, colors, and forms to represent the personality traits and story elements. Art style: modern abstract art, vibrant colors, geometric and organic shapes that reflect the story atmosphere.`,
+        'nature': `Create a natural landscape or scene based on this story context: ${storyContext}. MBTI Type: ${mbtiType} (${description}). Show a beautiful natural environment that reflects both the personality traits and the story setting - could be mountains, forests, oceans, or other natural settings that match the story atmosphere. Art style: realistic nature photography style.`,
+        'daily': `Create a daily life scene based on this story context: ${storyContext}. MBTI Type: ${mbtiType} (${description}). Show a realistic everyday situation or activity that would be typical for someone with these personality traits in this story setting. Art style: realistic lifestyle photography.`
+      };
+      
+      return categoryPrompts[category] || categoryPrompts['abstract'];
+    }
+
+    // 回答履歴から物語の文脈を構築
+    function buildStoryContext(answers, storyMode, customStory) {
+      let context = "";
+      
+      // 物語モードに応じた設定
+      const storySettings = {
+        'horror': {
+          atmosphere: 'ホラー・スリラー',
+          setting: '暗い夜道、古い屋敷、謎めいた出来事',
+          tone: '緊張感と恐怖感のある状況'
+        },
+        'adventure': {
+          atmosphere: 'アドベンチャー・冒険',
+          setting: '未知の土地、宝物探し、危険な挑戦',
+          tone: 'エキサイティングで冒険的な状況'
+        },
+        'mystery': {
+          atmosphere: 'ミステリー・推理',
+          setting: '謎めいた事件、隠された真実、複雑な人間関係',
+          tone: '推理と分析が必要な状況'
+        },
+        'creator': {
+          atmosphere: customStory?.mood || 'ドラマチック',
+          setting: customStory?.setting || '未知の世界',
+          tone: customStory?.theme || '冒険的な状況',
+          character: customStory?.character_background
+        }
+      };
+      
+      const story = storySettings[storyMode] || storySettings['adventure'];
+      
+      // 物語の基本設定
+      context += `Story Setting: ${story.setting}. Atmosphere: ${story.atmosphere}. Tone: ${story.tone}.`;
+      
+      if (story.character) {
+        context += ` Character Background: ${story.character}.`;
+      }
+      
+      // 回答履歴から物語の流れを構築
+      if (answers && answers.length > 0) {
+        context += " Story Journey: ";
+        answers.forEach((answer, index) => {
+          if (answer && answer.question && answer.choice) {
+            const choiceText = answer.choice === 'A' ? answer.optionA : answer.optionB;
+            context += `In situation ${index + 1} (${answer.question}), the character chose: ${choiceText}. `;
+          }
+        });
+      }
+      
+      return context;
+    }
+
+    // 音楽生成関数
+    async function generateMusic() {
+      const placeholder = document.getElementById('music-content');
+      
+      // ローディング表示
+      placeholder.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p style="margin-top: 1rem; color: #666;">音楽を生成中...</p>
+        </div>
+      `;
+      
+      try {
+        const response = await fetch('/mbti/generate_music', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: JSON.stringify({
+            session_id: '<%= @mbti_session.session_id %>'
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error('音楽生成に失敗しました');
+        }
+        
+        const data = await response.json();
+        
+        if (data.music_recommendations || data.playlist_info) {
+          // 音楽コンテンツを表示
+          let musicHtml = '<div class="music-content">';
+          
+          if (data.music_recommendations) {
+            if (data.music_recommendations.genres && data.music_recommendations.genres.length > 0) {
+              musicHtml += `
+                <div class="music-section">
+                  <h4>🎶 おすすめジャンル</h4>
+                  <ul class="music-list">
+                    ${data.music_recommendations.genres.map(genre => `<li>${genre}</li>`).join('')}
+                  </ul>
+                </div>
+              `;
+            }
+            
+            if (data.music_recommendations.artists && data.music_recommendations.artists.length > 0) {
+              musicHtml += `
+                <div class="music-section">
+                  <h4>🎤 おすすめアーティスト</h4>
+                  <ul class="music-list">
+                    ${data.music_recommendations.artists.map(artist => `<li>${artist}</li>`).join('')}
+                  </ul>
+                </div>
+              `;
+            }
+            
+            if (data.music_recommendations.songs && data.music_recommendations.songs.length > 0) {
+              musicHtml += `
+                <div class="music-section">
+                  <h4>🎼 おすすめ楽曲</h4>
+                  <ul class="music-list">
+                    ${data.music_recommendations.songs.map(song => `<li>${song}</li>`).join('')}
+                  </ul>
+                </div>
+              `;
+            }
+          }
+          
+          if (data.playlist_info) {
+            musicHtml += `
+              <div class="playlist-section">
+                <h3>🎧 あなた専用プレイリスト</h3>
+                <br>
+                <div class="playlist-card">
+                  <h5>${data.playlist_info.title}</h5>
+                  <p>${data.playlist_info.description}</p>
+                  <div class="playlist-songs">
+                    ${data.playlist_info.songs ? data.playlist_info.songs.map(song => `<div class="song-item">🎵 ${song}</div>`).join('') : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+          
+          musicHtml += '</div>';
+          placeholder.innerHTML = musicHtml;
+        } else {
+          throw new Error('音楽データが取得できませんでした');
+        }
+      } catch (error) {
+        console.error('Music generation error:', error);
+        placeholder.innerHTML = `
+          <div style="color: #c33; text-align: center;">
+            <p>❌ 音楽生成に失敗しました</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">${error.message}</p>
+            <button class="generate-btn" onclick="generateMusic()">
+              再試行
+            </button>
+          </div>
+        `;
+      }
+    }
+
+
 
     // 音楽プレイリストの再生（デモ用）
     function playPlaylist() {

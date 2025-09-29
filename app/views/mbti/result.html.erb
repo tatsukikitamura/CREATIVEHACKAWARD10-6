@@ -59,7 +59,7 @@
 
     <div class="actions">
       <a href="<%= mbti_resume_path(session_id: @mbti_session.session_id) %>" class="action-button continue-button">続きから再開する</a>
-      <a href="<%= mbti_path %>" class="action-button">もう一度診断する</a>
+      <a href="<%= mbti_path %>" class="action-button">ホームに戻る</a>
       <button onclick="shareResult()" class="action-button secondary">結果を共有</button>
       <!-- <button id="analyze-button" class="action-button secondary" data-session-id="<%= @mbti_session.session_id %>">さらに分析する</button> -->
       <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">🤖 AI診断で詳細分析</a>
