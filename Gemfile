@@ -48,7 +48,9 @@ gem "bootsnap", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
-
+group :development, :test do
+  gem 'bundler-audit', require: false
+end
 # Nokogiri with specific version for WSL2 compatibility
 gem "nokogiri", "~> 1.15.0"
 
