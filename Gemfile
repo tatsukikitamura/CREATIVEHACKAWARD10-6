@@ -82,7 +82,8 @@ group :development do
   # Speed up commands on slow machines / big apps [https://github.com/rails/spring]
   # gem "spring"
 
-  gem "error_highlight", ">= 0.4.0", platforms: [:ruby]
+  # Remove error_highlight from Gemfile as it's a default gem in Ruby 3.3+
+  # gem "error_highlight", ">= 0.4.0", platforms: [:ruby]
 end
 
 group :test do

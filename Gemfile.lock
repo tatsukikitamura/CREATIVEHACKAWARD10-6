@@ -109,7 +109,6 @@ GEM
       railties (>= 6.1)
     drb (2.2.3)
     erb (5.0.2)
-    error_highlight (0.7.0)
     erubi (1.13.1)
     event_stream_parser (1.0.0)
     faraday (2.14.0)
@@ -338,7 +337,6 @@ DEPENDENCIES
   capybara
   debug
   dotenv-rails
-  error_highlight (>= 0.4.0)
   importmap-rails
   jbuilder
   nokogiri (~> 1.18.9)
