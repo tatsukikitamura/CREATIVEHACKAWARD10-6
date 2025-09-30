@@ -56,7 +56,7 @@ gem "bootsnap", require: false
 # gem "image_processing", "~> 1.2"
 
 # Nokogiri with specific version for WSL2 compatibility
-gem "nokogiri", "~> 1.15.0"
+gem "nokogiri", "~> 1.18.9"
 
 # OpenAI API client
 gem "ruby-openai"
