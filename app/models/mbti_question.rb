@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# MBTI診断の質問を管理するモデル
 class MbtiQuestion
   include ActiveModel::Model
   include ActiveModel::Attributes
@@ -41,25 +44,22 @@ class MbtiQuestion
 
   def self.generate_questions
     # OpenAI APIを使って質問を生成するためのプロンプト
-    prompt = <<~PROMPT
+    <<~PROMPT
       MBTI（Myers-Briggs Type Indicator）の性格診断テスト用の質問を生成してください。
       以下の4つの次元について、それぞれ3つずつ、合計12個の質問を作成してください：
-      
+
       1. 外向性(E) vs 内向性(I)
-      2. 感覚(S) vs 直感(N)  
+      2. 感覚(S) vs 直感(N)#{'  '}
       3. 思考(T) vs 感情(F)
       4. 判断(J) vs 知覚(P)
-      
+
       各質問は以下の形式で出力してください：
       - 質問文
       - 選択肢A（最初の次元を表す）
       - 選択肢B（2番目の次元を表す）
       - 次元（E/I, S/N, T/F, J/Pのいずれか）
-      
+
       JSON形式で出力してください。
     PROMPT
-
-    prompt
   end
 end
-

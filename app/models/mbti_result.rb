@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# MBTI診断結果を管理するモデル
 class MbtiResult
   include ActiveModel::Model
   include ActiveModel::Attributes
@@ -33,10 +36,10 @@ class MbtiResult
       # 文字列キーとシンボルキーの両方に対応
       dimension = answer[:dimension] || answer['dimension']
       choice = answer[:choice] || answer['choice']
-      
+
       Rails.logger.info "Processing answer: dimension=#{dimension}, choice=#{choice}"
       Rails.logger.info "Full answer data: #{answer.inspect}"
-      
+
       if dimension && choice
         # dimensionが2文字の文字列であることを確認
         if dimension.is_a?(String) && dimension.length == 2
@@ -61,15 +64,15 @@ class MbtiResult
         elsif dimension.is_a?(String) && dimension.length == 1
           # 1文字の次元の場合の処理（既存の無効なデータ対応）
           Rails.logger.warn "Single character dimension detected: #{dimension}, attempting to map to valid dimension"
-          
+
           # 1文字の次元を2文字のペアにマッピング
           dimension_mapping = {
             'E' => 'EI', 'I' => 'EI',
-            'S' => 'SN', 'N' => 'SN', 
+            'S' => 'SN', 'N' => 'SN',
             'T' => 'TF', 'F' => 'TF',
             'J' => 'JP', 'P' => 'JP'
           }
-          
+
           mapped_dimension = dimension_mapping[dimension]
           if mapped_dimension
             Rails.logger.info "Mapped #{dimension} to #{mapped_dimension}"
@@ -98,7 +101,7 @@ class MbtiResult
     end
 
     Rails.logger.info "Final scores: #{scores.inspect}"
-    
+
     # MBTIタイプを決定
     begin
       mbti_type = ''
@@ -121,10 +124,10 @@ class MbtiResult
         answers: answers,
         created_at: Time.current
       )
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "Error calculating MBTI type: #{e.message}"
       Rails.logger.error "Error backtrace: #{e.backtrace.first(5).join("\n")}"
-      
+
       # エラー時のフォールバック
       new(
         mbti_type: 'INTJ',
@@ -148,4 +151,3 @@ class MbtiResult
     }
   end
 end
-

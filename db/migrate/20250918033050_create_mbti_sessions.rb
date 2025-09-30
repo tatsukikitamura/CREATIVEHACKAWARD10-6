@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# MBTI診断セッションのテーブルを作成するマイグレーション
 class CreateMbtiSessions < ActiveRecord::Migration[7.1]
   def change
     create_table :mbti_sessions do |t|
@@ -9,7 +12,7 @@ class CreateMbtiSessions < ActiveRecord::Migration[7.1]
 
       t.timestamps
     end
-    
+
     add_index :mbti_sessions, :session_id, unique: true
   end
 end

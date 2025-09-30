@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# MBTIセッションにカスタムストーリーを追加するマイグレーション
 class AddCustomStoryToMbtiSessions < ActiveRecord::Migration[7.1]
   def change
     add_column :mbti_sessions, :custom_story, :jsonb, default: {}

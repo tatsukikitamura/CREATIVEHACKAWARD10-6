@@ -1,3 +1,6 @@
+# frozen_string_literal: true
+
+# AIを使用してMBTIタイプに基づいた画像生成を行うサービス
 class AiPhotoService
   def initialize
     @openai_service = OpenaiService.new
@@ -5,63 +8,59 @@ class AiPhotoService
 
   # MBTIタイプと回答に基づいて画像のプロンプトを生成
   def generate_image_prompts(mbti_type, answers)
-    begin
-      prompt = build_image_prompt(mbti_type, answers)
-      response = @openai_service.client.chat(
-        parameters: {
-          model: "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: "あなたは画像生成の専門家です。MBTIタイプと回答に基づいて、その人の性格を表現する画像のプロンプトを生成してください。"
-            },
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
-          max_tokens: 800,
-          temperature: 0.9
-        }
-      )
+    prompt = build_image_prompt(mbti_type, answers)
+    response = @openai_service.client.chat(
+      parameters: {
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'あなたは画像生成の専門家です。MBTIタイプと回答に基づいて、その人の性格を表現する画像のプロンプトを生成してください。'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        max_tokens: 800,
+        temperature: 0.9
+      }
+    )
 
-      content = response.dig("choices", 0, "message", "content")
-      return parse_image_response(content) if content
+    content = response.dig('choices', 0, 'message', 'content')
+    return parse_image_response(content) if content
 
-      generate_fallback_images(mbti_type)
-    rescue => e
-      Rails.logger.error "Image prompt generation error: #{e.message}"
-      generate_fallback_images(mbti_type)
-    end
+    generate_fallback_images(mbti_type)
+  rescue StandardError => e
+    Rails.logger.error "Image prompt generation error: #{e.message}"
+    generate_fallback_images(mbti_type)
   end
 
   # DALL-Eを使用して画像を生成
-  def generate_image_with_dalle(prompt, size = "1024x1024")
-    begin
-      Rails.logger.info "Generating image with prompt: #{prompt}"
-      
-      response = @openai_service.client.images.generate(
-        parameters: {
-          model: "dall-e-2",
-          prompt: prompt,
-          size: size,
-          n: 1
-        }
-      )
+  def generate_image_with_dalle(prompt, size = '1024x1024')
+    Rails.logger.info "Generating image with prompt: #{prompt}"
 
-      image_url = response.dig("data", 0, "url")
-      if image_url
-        Rails.logger.info "Image generated successfully: #{image_url}"
-        return image_url
-      else
-        Rails.logger.warn "No image URL in response: #{response}"
-        return nil
-      end
-    rescue => e
-      Rails.logger.error "DALL-E image generation error: #{e.message}"
-      Rails.logger.error "Error details: #{e.inspect}"
+    response = @openai_service.client.images.generate(
+      parameters: {
+        model: 'dall-e-2',
+        prompt: prompt,
+        size: size,
+        n: 1
+      }
+    )
+
+    image_url = response.dig('data', 0, 'url')
+    if image_url
+      Rails.logger.info "Image generated successfully: #{image_url}"
+      image_url
+    else
+      Rails.logger.warn "No image URL in response: #{response}"
       nil
     end
+  rescue StandardError => e
+    Rails.logger.error "DALL-E image generation error: #{e.message}"
+    Rails.logger.error "Error details: #{e.inspect}"
+    nil
   end
 
   # 複数の画像を生成
@@ -71,13 +70,13 @@ class AiPhotoService
 
     prompts[:prompts].each do |prompt_data|
       image_url = generate_image_with_dalle(prompt_data[:prompt])
-      if image_url
-        images << {
-          url: image_url,
-          title: prompt_data[:title],
-          description: prompt_data[:description]
-        }
-      end
+      next unless image_url
+
+      images << {
+        url: image_url,
+        title: prompt_data[:title],
+        description: prompt_data[:description]
+      }
     end
 
     images
@@ -86,105 +85,106 @@ class AiPhotoService
   # MBTIタイプに基づくデフォルト画像プロンプト
   def get_default_prompts_for_type(mbti_type)
     type_prompts = {
-        'INTJ' => [
-          "Abstract geometric patterns representing strategic thinking, dark blue and silver tones, analytical precision",
-          "Mountain peak silhouette at sunrise, symbolic of vision and determination, minimalist composition",
-          "Floating geometric shapes and mathematical symbols, representing complex analysis and knowledge"
-        ],
+      'INTJ' => [
+        'Abstract geometric patterns representing strategic thinking, dark blue and silver tones, analytical precision',
+        'Mountain peak silhouette at sunrise, symbolic of vision and determination, minimalist composition',
+        'Floating geometric shapes and mathematical symbols, representing complex analysis and knowledge'
+      ],
       'INTP' => [
-        "Abstract geometric patterns representing logical thinking, purple and blue tones, mathematical precision",
-        "Floating books and digital elements in mysterious atmosphere, conceptual knowledge representation",
-        "Abstract puzzle pieces and code fragments floating in space, representing deep analytical thought"
+        'Abstract geometric patterns representing logical thinking, purple and blue tones, mathematical precision',
+        'Floating books and digital elements in mysterious atmosphere, conceptual knowledge representation',
+        'Abstract puzzle pieces and code fragments floating in space, representing deep analytical thought'
       ],
       'ENTJ' => [
-        "Abstract power symbols and commanding geometric shapes, red and gold tones, leadership energy",
-        "City skyline silhouette at sunset, representing ambition and success, minimalist urban composition",
-        "Floating decision-making symbols and abstract business elements, representing strategic authority"
+        'Abstract power symbols and commanding geometric shapes, red and gold tones, leadership energy',
+        'City skyline silhouette at sunset, representing ambition and success, minimalist urban composition',
+        'Floating decision-making symbols and abstract business elements, representing strategic authority'
       ],
       'ENTP' => [
-        "Abstract explosion of creative energy, colorful geometric shapes and dynamic patterns, bright vibrant colors",
-        "Futuristic abstract cityscape with innovative architectural elements, dynamic and creative composition",
-        "Floating light bulbs and idea symbols in energetic motion, representing enthusiastic innovation"
+        'Abstract explosion of creative energy, colorful geometric shapes and dynamic patterns, bright vibrant colors',
+        'Futuristic abstract cityscape with innovative architectural elements, dynamic and creative composition',
+        'Floating light bulbs and idea symbols in energetic motion, representing enthusiastic innovation'
       ],
       'INFJ' => [
-        "Abstract gentle light patterns through organic shapes, representing insight and wisdom, soft green and gold tones",
-        "Flowing abstract water patterns and peaceful garden elements, serene and contemplative composition",
-        "Floating heart symbols and helping hands in abstract form, representing compassion and understanding"
+        'Abstract gentle light patterns through organic shapes, representing insight and wisdom, ' \
+        'soft green and gold tones',
+        'Flowing abstract water patterns and peaceful garden elements, serene and contemplative composition',
+        'Floating heart symbols and helping hands in abstract form, representing compassion and understanding'
       ],
       'INFP' => [
-        "Abstract dreamy watercolor patterns, artistic and emotional, soft pastel colors flowing together",
-        "Magical abstract forest elements with soft ethereal lighting, imaginative and whimsical composition",
-        "Floating artistic tools and creative symbols, representing inner emotional expression and artistic soul"
+        'Abstract dreamy watercolor patterns, artistic and emotional, soft pastel colors flowing together',
+        'Magical abstract forest elements with soft ethereal lighting, imaginative and whimsical composition',
+        'Floating artistic tools and creative symbols, representing inner emotional expression and artistic soul'
       ],
       'ENFJ' => [
-        "Abstract warm community symbols and connecting elements, representing support and togetherness",
-        "Sunrise abstract patterns over community silhouettes, representing hope and inspiration",
-        "Floating teaching and mentoring symbols, representing caring guidance and encouragement"
+        'Abstract warm community symbols and connecting elements, representing support and togetherness',
+        'Sunrise abstract patterns over community silhouettes, representing hope and inspiration',
+        'Floating teaching and mentoring symbols, representing caring guidance and encouragement'
       ],
       'ENFP' => [
-        "Abstract explosion of vibrant colors and creative energy, spontaneous and dynamic patterns",
-        "Multiple abstract paths and adventure symbols, exciting and open exploration composition",
-        "Floating exploration symbols and curiosity elements, representing excitement and discovery"
+        'Abstract explosion of vibrant colors and creative energy, spontaneous and dynamic patterns',
+        'Multiple abstract paths and adventure symbols, exciting and open exploration composition',
+        'Floating exploration symbols and curiosity elements, representing excitement and discovery'
       ],
       'ISTJ' => [
-        "Abstract organized geometric patterns, representing perfect order and structure, reliable and methodical",
-        "Stable abstract mountain silhouettes, solid and dependable composition, minimalist landscape",
-        "Floating task completion symbols and precision elements, representing methodical work and reliability"
+        'Abstract organized geometric patterns, representing perfect order and structure, reliable and methodical',
+        'Stable abstract mountain silhouettes, solid and dependable composition, minimalist landscape',
+        'Floating task completion symbols and precision elements, representing methodical work and reliability'
       ],
       'ISFJ' => [
-        "Abstract cozy home symbols and nurturing elements, caring and warm earth tones",
-        "Gentle abstract garden patterns with blooming flower elements, peaceful and supportive composition",
-        "Floating care symbols and love elements, representing nurturing attention and support"
+        'Abstract cozy home symbols and nurturing elements, caring and warm earth tones',
+        'Gentle abstract garden patterns with blooming flower elements, peaceful and supportive composition',
+        'Floating care symbols and love elements, representing nurturing attention and support'
       ],
       'ESTJ' => [
-        "Abstract efficient office symbols and productive elements, organized and professional tones",
-        "Well-planned abstract city patterns with clear structure, reliable and systematic composition",
-        "Floating leadership symbols and authority elements, representing competence and team management"
+        'Abstract efficient office symbols and productive elements, organized and professional tones',
+        'Well-planned abstract city patterns with clear structure, reliable and systematic composition',
+        'Floating leadership symbols and authority elements, representing competence and team management'
       ],
       'ESFJ' => [
-        "Abstract happy family symbols and social elements, caring and warm inviting atmosphere",
-        "Community celebration patterns and joyful elements, supportive and festive composition",
-        "Floating event organization symbols and connection elements, representing bringing people together"
+        'Abstract happy family symbols and social elements, caring and warm inviting atmosphere',
+        'Community celebration patterns and joyful elements, supportive and festive composition',
+        'Floating event organization symbols and connection elements, representing bringing people together'
       ],
       'ISTP' => [
-        "Abstract technical workshop symbols and tool elements, practical and hands-on mechanical patterns",
-        "Adventure sports abstract symbols, independent and action-oriented dynamic composition",
-        "Floating building and fixing symbols, representing skill and focused craftsmanship"
+        'Abstract technical workshop symbols and tool elements, practical and hands-on mechanical patterns',
+        'Adventure sports abstract symbols, independent and action-oriented dynamic composition',
+        'Floating building and fixing symbols, representing skill and focused craftsmanship'
       ],
       'ISFP' => [
-        "Abstract artistic studio elements and creative symbols, sensitive and aesthetic composition",
-        "Natural abstract landscape patterns with artistic elements, peaceful and beautiful organic forms",
-        "Floating beauty creation symbols and care elements, representing artistic attention and aesthetic focus"
+        'Abstract artistic studio elements and creative symbols, sensitive and aesthetic composition',
+        'Natural abstract landscape patterns with artistic elements, peaceful and beautiful organic forms',
+        'Floating beauty creation symbols and care elements, representing artistic attention and aesthetic focus'
       ],
       'ESTP' => [
-        "Abstract dynamic action patterns, energetic and spontaneous, bold vibrant colors",
-        "Adventure sports abstract symbols and outdoor elements, exciting and active composition",
-        "Floating action symbols and energy elements, representing immediate confident movement"
+        'Abstract dynamic action patterns, energetic and spontaneous, bold vibrant colors',
+        'Adventure sports abstract symbols and outdoor elements, exciting and active composition',
+        'Floating action symbols and energy elements, representing immediate confident movement'
       ],
       'ESFP' => [
-        "Abstract vibrant party symbols and celebration elements, fun-loving and social bright colors",
-        "Festive abstract outdoor patterns, joyful and energetic composition",
-        "Floating entertainment symbols and charm elements, representing enthusiasm and social energy"
+        'Abstract vibrant party symbols and celebration elements, fun-loving and social bright colors',
+        'Festive abstract outdoor patterns, joyful and energetic composition',
+        'Floating entertainment symbols and charm elements, representing enthusiasm and social energy'
       ]
     }
 
     prompts = type_prompts[mbti_type] || type_prompts['INTJ']
-    
+
     {
       prompts: [
         {
-          title: "抽象的な表現",
-          description: "あなたの性格を抽象的に表現",
+          title: '抽象的な表現',
+          description: 'あなたの性格を抽象的に表現',
           prompt: "#{prompts[0]}. Abstract, symbolic, conceptual, artistic representation."
         },
         {
-          title: "自然・風景での表現", 
-          description: "あなたの性格を自然で表現",
+          title: '自然・風景での表現',
+          description: 'あなたの性格を自然で表現',
           prompt: "#{prompts[1]}. Abstract, symbolic, conceptual, artistic representation."
         },
         {
-          title: "日常シーンでの表現",
-          description: "あなたの性格を日常で表現",
+          title: '日常シーンでの表現',
+          description: 'あなたの性格を日常で表現',
           prompt: "#{prompts[2]}. Abstract, symbolic, conceptual, artistic representation."
         }
       ]
@@ -194,26 +194,26 @@ class AiPhotoService
   private
 
   def build_image_prompt(mbti_type, answers)
-    answer_summary = answers.map { |a| "#{a[:dimension]}: #{a[:choice]}" }.join(", ")
-    
+    answer_summary = answers.map { |a| "#{a[:dimension]}: #{a[:choice]}" }.join(', ')
+
     <<~PROMPT
       MBTIタイプ: #{mbti_type}
       回答内容: #{answer_summary}
-      
+
       この人の性格特性を表現する3つの異なる画像のプロンプトを生成してください：
-      
+
       ## 抽象的な表現
       [性格の本質を抽象的に表現した画像のプロンプト]
-      
+
       ## 自然・風景での表現
       [性格を自然や風景で表現した画像のプロンプト]
-      
+
       ## 日常シーンでの表現
       [性格を日常のシーンで表現した画像のプロンプト]
-      
+
       各プロンプトは英語で、DALL-Eで生成可能な形式で記述してください。
       プロンプトは具体的で、視覚的に魅力的な画像を生成できるようにしてください。
-      
+
       【重要】画像生成の制約事項：
       - 抽象的な表現を重視し、具体的な物体や人物よりも概念的な視覚表現を心がけてください
       - 色彩、形状、質感、光と影の効果を活用して感情や性格を表現してください
@@ -228,9 +228,9 @@ class AiPhotoService
     current_prompt = nil
     current_title = nil
     current_description = nil
-    
+
     lines.each do |line|
-      if line.start_with?("##")
+      if line.start_with?('##')
         if current_prompt && current_title
           # プロンプトに抽象的な表現のルールを自動追加
           enhanced_prompt = "#{current_prompt.strip}. Abstract, symbolic, conceptual, artistic representation."
@@ -240,19 +240,19 @@ class AiPhotoService
             prompt: enhanced_prompt
           }
         end
-        
-        current_title = line.gsub(/^##\s*/, "")
-        current_description = ""
-        current_prompt = ""
-      elsif line.strip.present? && !line.start_with?("#")
+
+        current_title = line.gsub(/^##\s*/, '')
+        current_description = ''
+        current_prompt = ''
+      elsif line.strip.present? && !line.start_with?('#')
         if current_prompt.nil?
           current_prompt = line
         else
-          current_prompt += " " + line
+          current_prompt += " #{line}"
         end
       end
     end
-    
+
     # 最後のプロンプトを追加
     if current_prompt && current_title
       # プロンプトに抽象的な表現のルールを自動追加
@@ -263,7 +263,7 @@ class AiPhotoService
         prompt: enhanced_prompt
       }
     end
-    
+
     { prompts: prompts }
   end
 
@@ -271,22 +271,21 @@ class AiPhotoService
     {
       prompts: [
         {
-          title: "抽象的な表現",
-          description: "あなたの性格を抽象的に表現",
+          title: '抽象的な表現',
+          description: 'あなたの性格を抽象的に表現',
           prompt: "Abstract art representing #{mbti_type} personality type, vibrant colors, modern style"
         },
         {
-          title: "自然・風景での表現",
-          description: "あなたの性格を自然で表現",
+          title: '自然・風景での表現',
+          description: 'あなたの性格を自然で表現',
           prompt: "Beautiful landscape representing #{mbti_type} personality, peaceful and inspiring"
         },
         {
-          title: "日常シーンでの表現",
-          description: "あなたの性格を日常で表現",
+          title: '日常シーンでの表現',
+          description: 'あなたの性格を日常で表現',
           prompt: "Daily life scene representing #{mbti_type} personality, warm and inviting"
         }
       ]
     }
   end
-
 end

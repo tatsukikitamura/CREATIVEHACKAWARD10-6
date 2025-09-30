@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.3
+  Exclude:
+    - 'bin/**/*'
+    - 'config/**/*'
+    - 'db/**/*'
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+    - 'storage/**/*'
+    - 'tmp/**/*'
+    - 'log/**/*'
+
+# 複雑度に関する設定を緩和
+Metrics/AbcSize:
+  Max: 120
+
+Metrics/CyclomaticComplexity:
+  Max: 50
+
+Metrics/PerceivedComplexity:
+  Max: 50
+
+Metrics/MethodLength:
+  Max: 150
+
+Metrics/ClassLength:
+  Max: 1000
+
+Metrics/BlockLength:
+  Max: 80
+
+Metrics/BlockNesting:
+  Max: 6
+
+Metrics/ParameterLists:
+  Max: 10
+
+# 行の長さを緩和
+Layout/LineLength:
+  Max: 150
+
+# ドキュメントコメントを必須にしない
+Style/Documentation:
+  Enabled: false
+
+# 警告を抑制
+Bundler/DuplicatedGroup:
+  Enabled: false
+
+Lint/DuplicateBranch:
+  Enabled: false

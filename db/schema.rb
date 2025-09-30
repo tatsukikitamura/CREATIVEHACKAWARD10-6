@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -10,23 +12,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_26_063204) do
+ActiveRecord::Schema[8.0].define(version: 20_250_926_063_204) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "pg_catalog.plpgsql"
+  enable_extension 'pg_catalog.plpgsql'
 
-  create_table "mbti_sessions", force: :cascade do |t|
-    t.string "session_id", null: false
-    t.text "questions"
-    t.text "answers"
-    t.integer "current_question_index", default: 0
-    t.boolean "completed", default: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "story_mode"
-    t.jsonb "story_state", default: {}
-    t.jsonb "custom_story", default: {}
-    t.index ["custom_story"], name: "index_mbti_sessions_on_custom_story", using: :gin
-    t.index ["session_id"], name: "index_mbti_sessions_on_session_id", unique: true
-    t.index ["story_state"], name: "index_mbti_sessions_on_story_state", using: :gin
+  create_table 'mbti_sessions', force: :cascade do |t|
+    t.string 'session_id', null: false
+    t.text 'questions'
+    t.text 'answers'
+    t.integer 'current_question_index', default: 0
+    t.boolean 'completed', default: false
+    t.datetime 'created_at', null: false
+    t.datetime 'updated_at', null: false
+    t.string 'story_mode'
+    t.jsonb 'story_state', default: {}
+    t.jsonb 'custom_story', default: {}
+    t.index ['custom_story'], name: 'index_mbti_sessions_on_custom_story', using: :gin
+    t.index ['session_id'], name: 'index_mbti_sessions_on_session_id', unique: true
+    t.index ['story_state'], name: 'index_mbti_sessions_on_story_state', using: :gin
   end
 end
