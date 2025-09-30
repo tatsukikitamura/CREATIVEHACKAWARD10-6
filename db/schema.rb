@@ -22,9 +22,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_26_063204) do
     t.string "story_mode"
     t.json "story_state", default: {}
     t.json "custom_story", default: {}
-    t.index ["custom_story"], name: "index_mbti_sessions_on_custom_story"
+    t.index ["custom_story"], name: "index_mbti_sessions_on_custom_story", using: :gin
     t.index ["session_id"], name: "index_mbti_sessions_on_session_id", unique: true
-    t.index ["story_state"], name: "index_mbti_sessions_on_story_state"
+    t.index ["story_state"], name: "index_mbti_sessions_on_story_state", using: :gin
   end
 
 end
