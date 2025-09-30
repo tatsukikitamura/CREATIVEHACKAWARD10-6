@@ -16,8 +16,11 @@ gem "sassc-rails"
 
 # Use sqlite3 as the database for Active Record
 group :development, :test do
+  gem "brakeman"
+  gem "rubocop"
   gem "sqlite3", "~> 2.1"
 end
+
 
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
