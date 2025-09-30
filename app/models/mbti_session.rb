@@ -2,8 +2,8 @@ class MbtiSession < ApplicationRecord
   validates :session_id, presence: true, uniqueness: true
   validates :current_question_index, presence: true, numericality: { greater_than_or_equal_to: 0 }
   
-  serialize :questions, JSON
-  serialize :answers, JSON
+  serialize :questions, coder: JSON
+  serialize :answers, coder: JSON
   
   # 各次元の質問数を追跡
   DIMENSIONS = %w[EI SN TF JP].freeze

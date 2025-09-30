@@ -1,9 +1,9 @@
 source "https://rubygems.org"
 
-ruby "3.1.2"
+ruby "3.3.0"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 7.1.5", ">= 7.1.5.1"
+gem "rails", "~> 8.0.2", ">= 8.0.2.1"
 
 # The original asset pipeline for Rails [https://github.com/rails/sprockets-rails]
 gem "sprockets-rails"
@@ -11,10 +11,9 @@ gem "sprockets-rails"
 # SCSS compiler
 gem "sassc-rails"
 
-
 # Use sqlite3 as the database for Active Record
 group :development, :test do
-  gem "sqlite3", "~> 1.4"
+  gem "sqlite3", "~> 2.1"
 end
 
 # Use the Puma web server [https://github.com/puma/puma]
