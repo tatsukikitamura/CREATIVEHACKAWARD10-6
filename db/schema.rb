@@ -10,7 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_09_26_063204) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_26_063204) do
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "pg_catalog.plpgsql"
+
   create_table "mbti_sessions", force: :cascade do |t|
     t.string "session_id", null: false
     t.text "questions"
@@ -20,11 +23,10 @@ ActiveRecord::Schema[7.1].define(version: 2025_09_26_063204) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "story_mode"
-    t.json "story_state", default: {}
-    t.json "custom_story", default: {}
+    t.jsonb "story_state", default: {}
+    t.jsonb "custom_story", default: {}
     t.index ["custom_story"], name: "index_mbti_sessions_on_custom_story", using: :gin
     t.index ["session_id"], name: "index_mbti_sessions_on_session_id", unique: true
     t.index ["story_state"], name: "index_mbti_sessions_on_story_state", using: :gin
   end
-
 end
