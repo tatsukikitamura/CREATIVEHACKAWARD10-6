@@ -6,10 +6,15 @@
   <title>物語モード選択 - MBTI診断</title>
   <%= stylesheet_link_tag 'mbti_common', 'data-turbo-track': 'reload' %>
   <style>
+    /* フォールバック用のスタイル - CSSが読み込まれない場合の対策 */
     .mode-selection {
       text-align: center;
-      max-width: 800px;
+      max-width: 1200px;
       margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     
     .mode-title {
@@ -20,6 +25,11 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      text-align: center;
+      width: 100%;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
     
     .mode-subtitle {
@@ -30,9 +40,37 @@
     
     .modes-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      grid-template-columns: 1fr;
       gap: 2rem;
       margin-bottom: 3rem;
+      width: 100%;
+    }
+    
+    /* タブレット以上で2列表示 */
+    @media (min-width: 768px) {
+      .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    
+    /* デスクトップ以上で2列表示（一行に二つずつ） */
+    @media (min-width: 1024px) {
+      .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 1000px;
+        margin: 0 auto 3rem auto;
+      }
+      
+      .mode-card {
+        min-height: 350px;
+      }
+    }
+    
+    /* 大きな画面では最大幅を制限 */
+    @media (min-width: 1200px) {
+      .modes-grid {
+        max-width: 1200px;
+      }
     }
     
     .mode-card {
@@ -43,6 +81,9 @@
       transition: all 0.3s ease;
       cursor: pointer;
       border: 3px solid transparent;
+      min-height: 300px;
+      display: flex;
+      flex-direction: column;
     }
     
     .mode-card:hover {
@@ -71,12 +112,14 @@
       color: #666;
       line-height: 1.6;
       margin-bottom: 1.5rem;
+      flex-grow: 1;
     }
     
     .mode-example {
       font-size: 0.9rem;
       color: #888;
       font-style: italic;
+      margin-top: auto;
     }
     
     .creator-card {
@@ -125,6 +168,7 @@
       transition: all 0.3s ease;
       opacity: 0.5;
       pointer-events: none;
+      margin-top: 2rem;
     }
     
     .continue-button.active {
@@ -148,15 +192,81 @@
     .back-link:hover {
       text-decoration: underline;
     }
+    
+    .back-section {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    
+    .back-button {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 1.1rem;
+      display: inline-block;
+      padding: 10px 20px;
+      border: 2px solid #667eea;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+    }
+    
+    .back-button:hover {
+      background-color: #667eea;
+      color: white;
+      text-decoration: none;
+    }
+    
+    /* レスポンシブ対応 */
+    @media (max-width: 767px) {
+      .mode-selection {
+        padding: 1rem;
+      }
+      
+      .mode-title {
+        font-size: 2rem;
+        text-align: center;
+      }
+      
+      .mode-subtitle {
+        font-size: 1rem;
+        text-align: center;
+      }
+      
+      .mode-card {
+        padding: 1.5rem;
+        min-height: 250px;
+      }
+      
+      .mode-icon {
+        font-size: 3rem;
+      }
+      
+      .mode-name {
+        font-size: 1.3rem;
+      }
+      
+      .continue-button {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+      }
+    }
+    
+    /* タブレット以上でも中央揃えを確実にする */
+    @media (min-width: 768px) {
+      .mode-title {
+        text-align: center;
+      }
+      
+      .mode-subtitle {
+        text-align: center;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  
     <div class="mode-selection">
-      <%= link_to "← 戻る", mbti_path, class: "back-link" %>
       
       <h1 class="mode-title">物語モードを選択</h1>
-      <p class="mode-subtitle">あなたの好みの世界観でMBTI診断を体験しましょう</p>
       
       <%= form_with url: mbti_set_mode_path, method: :post, local: true, id: "mode-form" do |form| %>
         <%= form.hidden_field :session_id, value: @session_id %>
@@ -169,10 +279,7 @@
           <div class="mode-card" data-mode="horror">
             <div class="mode-icon">👻</div>
             <div class="mode-name">ホラー</div>
-            <div class="mode-description">
-              暗い夜道、古い屋敷、謎めいた出来事...<br>
-              恐怖と緊張の中で、あなたの本当の性格が明らかになります。
-            </div>
+            
             <div class="mode-example">
               例：「暗い森で道に迷った時、あなたは...」
             </div>
@@ -181,10 +288,7 @@
           <div class="mode-card" data-mode="adventure">
             <div class="mode-icon">🗺️</div>
             <div class="mode-name">アドベンチャー</div>
-            <div class="mode-description">
-              未知の土地への冒険、宝物探し、危険な挑戦...<br>
-              エキサイティングな冒険の中で、あなたの冒険者としての性格を発見します。
-            </div>
+            
             <div class="mode-example">
               例：「古代遺跡の謎を解く時、あなたは...」
             </div>
@@ -193,10 +297,7 @@
           <div class="mode-card" data-mode="mystery">
             <div class="mode-icon">🔍</div>
             <div class="mode-name">ミステリー</div>
-            <div class="mode-description">
-              謎めいた事件、隠された真実、複雑な人間関係...<br>
-              推理と分析の中で、あなたの探偵としての性格を明かします。
-            </div>
+            
             <div class="mode-example">
               例：「不可解な事件の手がかりを発見した時、あなたは...」
             </div>
@@ -216,6 +317,10 @@
           選択したモードで診断を開始
         </button>
       <% end %>
+      
+      <div class="back-section">
+        <%= link_to "← 戻る", mbti_path, class: "back-button" %>
+      </div>
     </div>
   </div>
 
