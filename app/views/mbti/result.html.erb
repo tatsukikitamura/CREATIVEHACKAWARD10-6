@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<%= form_authenticity_token %>">
   <title>MBTI診断結果</title>
   <%= stylesheet_link_tag 'mbti_result', 'data-turbo-track': 'reload' %>
 </head>
 <body>
-  <div class="container">
     <div class="header">
       <div class="result-icon">🎯</div>
       <h1 class="mbti-type"><%= @result.mbti_type %></h1>
@@ -76,7 +76,10 @@
       </div>
       <button onclick="copyToClipboard()" class="copy-button">コピー</button>
     </div>
-  </div>
+    <br>
+    <!-- あなただけの詳細レポート（空コンテナ。クリック時に内容を注入して表示） -->
+    <div id="personalized-report-container" class="scores-container personalized-report" style="display: none;"></div>
+  
 
   <script>
     // CSRF token
@@ -132,7 +135,7 @@
           section.id = 'analysis-container';
           section.className = 'scores-container';
           section.innerHTML = '<h2 class="scores-title">詳細分析</h2><div>分析中...</div>';
-          document.querySelector('.container').appendChild(section);
+          document.body.appendChild(section);
           section.scrollIntoView({ behavior: 'smooth' });
 
           try {
@@ -162,14 +165,10 @@
       if (personalizedReportBtn) {
         personalizedReportBtn.addEventListener('click', async function() {
           const sessionId = this.getAttribute('data-session-id');
-          const existing = document.getElementById('personalized-report-container');
-          if (existing) existing.remove();
-
-          const section = document.createElement('div');
-          section.id = 'personalized-report-container';
-          section.className = 'scores-container personalized-report';
+          const section = document.getElementById('personalized-report-container');
+          if (!section) return;
+          section.style.display = 'block';
           section.innerHTML = '<h2 class="scores-title">🎭 あなただけの詳細レポート</h2><div class="loading">物語の文脈で分析中...</div>';
-          document.querySelector('.container').appendChild(section);
           section.scrollIntoView({ behavior: 'smooth' });
 
           try {

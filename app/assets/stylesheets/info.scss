@@ -180,6 +180,16 @@ body {
   }
 }
 
+// 長いURL等で横スクロールが発生しないよう折り返しを許可
+.github-content,
+.github-content p,
+.github-content a,
+.github-link,
+.github-card {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 .github-stats {
   background: white;
   padding: 1.5rem;
@@ -337,5 +347,17 @@ body {
   .developer-card {
     flex-direction: column;
     text-align: center;
+  }
+}
+
+// さらに小さい端末向けの微調整
+@media (max-width: 480px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .github-card,
+  .github-stats {
+    padding: 1rem;
   }
 }

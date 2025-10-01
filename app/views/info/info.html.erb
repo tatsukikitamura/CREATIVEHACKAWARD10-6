@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>プロジェクト情報 - MBTI性格診断テスト</title>
+  <title>プロジェクト情報 -  MBTI性格診断 テスト</title>
   <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
   <%= stylesheet_link_tag 'info', 'data-turbo-track': 'reload' %>
   <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
@@ -12,12 +12,13 @@
   <div class="container">
     <div class="logo">🧠</div>
     <h1 class="title">プロジェクト情報</h1>
-    <p class="subtitle">MBTI性格診断テスト - AI活用による革新的な診断システム</p>
+ 
     
     <div class="info-sections">
       <!-- プロジェクト概要 -->
-      <div class="info-section">
-        <h2>📋 プロジェクト概要</h2>
+      <section>
+        <h2>📋 概要</h2>
+        <br>
         <div class="info-content">
           <p>AIが動的に生成する質問に答えるだけで、MBTI性格タイプを診断・可視化するWebアプリです。4つの次元（外向性/内向性、感覚/直感、思考/感情、判断/知覚）をもとに回答し、16タイプから最適なタイプを推定します。</p>
           
@@ -42,10 +43,10 @@
             </ul>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- 技術スタック -->
-      <div class="info-section">
+      <section>
         <h2>⚙️ 技術スタック</h2>
         <div class="tech-grid">
           <div class="tech-item">
@@ -69,10 +70,10 @@
             <p>Turbo / Stimulus / Importmap</p>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- GitHub情報 -->
-      <div class="info-section">
+      <section>
         <h2>📂 GitHub情報</h2>
         <div class="github-info">
           <div class="github-card">
@@ -88,32 +89,12 @@
             </div>
           </div>
           
-          <div class="github-stats">
-            <h3>📊 プロジェクト統計</h3>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <div class="stat-number">17</div>
-                <div class="stat-label">コミット数</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">16</div>
-                <div class="stat-label">MBTIタイプ</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">3</div>
-                <div class="stat-label">物語モード</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-number">2</div>
-                <div class="stat-label">診断方式</div>
-              </div>
-            </div>
-          </div>
+          
         </div>
-      </div>
+      </section>
 
       <!-- 開発者情報 -->
-      <div class="info-section">
+      <section>
         <h2>👨‍💻 開発者情報</h2>
         <div class="developer-info">
           <div class="developer-card">
@@ -126,10 +107,10 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- ライセンス・免責事項 -->
-      <div class="info-section">
+      <section>
         <h2>📄 ライセンス・免責事項</h2>
         <div class="legal-info">
           <div class="legal-box">
@@ -142,7 +123,7 @@
             <p>ユーザーの回答データは診断目的のみに使用され、第三者と共有されることはありません。セッション終了後、データは適切に管理されます。</p>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
     <div class="back-section">
@@ -150,6 +131,6 @@
     </div>
   </div>
   
-  <%= render 'shared/footer' %>
+  
 </body>
 </html>

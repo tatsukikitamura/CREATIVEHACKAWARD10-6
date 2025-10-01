@@ -51,13 +51,6 @@
       text-align: center;
     }
 
-    .creator-form {
-      background: #f8f9fa;
-      border-radius: 15px;
-      padding: 2rem;
-      border-left: 5px solid #ff6b6b;
-      margin-bottom: 2rem;
-    }
 
     .form-group {
       margin-bottom: 2rem;
@@ -215,49 +208,47 @@
     <%= form_with url: mbti_create_story_path, method: :post, local: true, id: "creator-form" do |form| %>
       <%= form.hidden_field :session_id, value: @session_id %>
       
-      <div class="creator-form">
-        <div class="form-group">
-          <%= form.label :setting, "冒険の舞台", class: "form-label" %>
-          <%= form.text_field :setting, 
-              placeholder: "例：近未来の東京、魔法の王国、宇宙ステーション", 
-              class: "form-input",
-              id: "setting-input" %>
-          <div class="example-text">物語が展開する場所や時代を設定してください</div>
-        </div>
-        
-        <div class="form-group">
-          <%= form.label :theme, "テーマ・目標", class: "form-label" %>
-          <%= form.text_field :theme, 
-              placeholder: "例：失われた記憶を探す、古代の謎を解く、世界を救う", 
-              class: "form-input",
-              id: "theme-input" %>
-          <div class="example-text">主人公が達成すべき目標や探求するテーマを設定してください</div>
-        </div>
-        
-        <div class="form-group">
-          <%= form.label :mood, "物語の雰囲気", class: "form-label" %>
-          <%= form.select :mood, 
-              options_for_select([
-                ['ドラマチック', 'dramatic'],
-                ['ミステリアス', 'mysterious'],
-                ['アドベンチャー', 'adventure'],
-                ['ロマンチック', 'romantic'],
-                ['スリラー', 'thriller'],
-                ['コメディ', 'comedy']
-              ]), 
-              { prompt: "雰囲気を選択してください" },
-              { class: "form-input" } %>
-          <div class="example-text">物語全体の雰囲気やトーンを選択してください</div>
-        </div>
-        
-        <div class="form-group">
-          <%= form.label :character_background, "主人公の背景（任意）", class: "form-label" %>
-          <%= form.text_area :character_background, 
-              placeholder: "例：記憶を失った探偵、魔法学校の学生、宇宙飛行士", 
-              class: "form-input form-textarea",
-              id: "character-input" %>
-          <div class="example-text">主人公の職業や背景を設定すると、より個性的な物語になります</div>
-        </div>
+      <div class="form-group">
+        <%= form.label :setting, "冒険の舞台", class: "form-label" %>
+        <%= form.text_field :setting, 
+            placeholder: "例：近未来の東京、魔法の王国、宇宙ステーション", 
+            class: "form-input",
+            id: "setting-input" %>
+        <div class="example-text">物語が展開する場所や時代を設定してください</div>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :theme, "テーマ・目標", class: "form-label" %>
+        <%= form.text_field :theme, 
+            placeholder: "例：失われた記憶を探す、古代の謎を解く、世界を救う", 
+            class: "form-input",
+            id: "theme-input" %>
+        <div class="example-text">主人公が達成すべき目標や探求するテーマを設定してください</div>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :mood, "物語の雰囲気", class: "form-label" %>
+        <%= form.select :mood, 
+            options_for_select([
+              ['ドラマチック', 'dramatic'],
+              ['ミステリアス', 'mysterious'],
+              ['アドベンチャー', 'adventure'],
+              ['ロマンチック', 'romantic'],
+              ['スリラー', 'thriller'],
+              ['コメディ', 'comedy']
+            ]), 
+            { prompt: "雰囲気を選択してください" },
+            { class: "form-input" } %>
+        <div class="example-text">物語全体の雰囲気やトーンを選択してください</div>
+      </div>
+      
+      <div class="form-group">
+        <%= form.label :character_background, "主人公の背景（任意）", class: "form-label" %>
+        <%= form.text_area :character_background, 
+            placeholder: "例：記憶を失った探偵、魔法学校の学生、宇宙飛行士", 
+            class: "form-input form-textarea",
+            id: "character-input" %>
+        <div class="example-text">主人公の職業や背景を設定すると、より個性的な物語になります</div>
       </div>
       
       <div class="preview-section" id="preview-section" style="display: none;">

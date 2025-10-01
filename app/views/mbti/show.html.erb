@@ -8,53 +8,48 @@
   <%= stylesheet_link_tag 'mbti_themes', 'data-turbo-track': 'reload' %>
 </head>
 <body class="theme-<%= @ui_theme %>">
-  <div class="container">
-    <div class="question-counter">
-      質問 <%= @current_question_number %>
+  <div class="question-counter">
+    質問 <%= @current_question_number %>
+  </div>
+
+  <% if flash[:alert] %>
+    <div class="alert">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
+  <h2 class="question"><%= @current_question.question %></h2>
+
+  <%= form_with url: mbti_answer_path, method: :post, local: true, id: "answer-form" do |form| %>
+    <%= form.hidden_field :session_id, value: @mbti_session.session_id %>
+    <%= form.hidden_field :authenticity_token, value: form_authenticity_token %>
+    <div class="options">
+      <div class="option" data-choice="A">
+        <div class="option-label">A</div>
+        <div class="option-text"><%= @current_question.options[0] %></div>
+      </div>
+      <div class="option" data-choice="B">
+        <div class="option-label">B</div>
+        <div class="option-text"><%= @current_question.options[1] %></div>
+      </div>
     </div>
 
-    <% if flash[:alert] %>
-      <div class="alert">
-        <%= flash[:alert] %>
-      </div>
+    <%= form.hidden_field :choice, id: "choice-input" %>
+  <% end %>
+
+  <div class="navigation">
+    <% if @current_question_number > 1 %>
+      <%= button_to "前の質問", mbti_back_path, method: :post, params: { session_id: @mbti_session.session_id }, class: "back-button", data: { turbo: false } %>
+    <% else %>
+      <div></div>
     <% end %>
 
-
-    <h2 class="question"><%= @current_question.question %></h2>
-
-    <%= form_with url: mbti_answer_path, method: :post, local: true, id: "answer-form" do |form| %>
-      <%= form.hidden_field :session_id, value: @mbti_session.session_id %>
-      <%= form.hidden_field :authenticity_token, value: form_authenticity_token %>
-      <div class="options">
-        <div class="option" data-choice="A">
-          <div class="option-label">A</div>
-          <div class="option-text"><%= @current_question.options[0] %></div>
-        </div>
-        <div class="option" data-choice="B">
-          <div class="option-label">B</div>
-          <div class="option-text"><%= @current_question.options[1] %></div>
-        </div>
-      </div>
-
-      <%= form.hidden_field :choice, id: "choice-input" %>
-
-      
-    <% end %>
-
-    <div class="navigation">
-      <% if @current_question_number > 1 %>
-        <%= button_to "前の質問", mbti_back_path, method: :post, params: { session_id: @mbti_session.session_id }, class: "back-button", data: { turbo: false } %>
-      <% else %>
-        <div></div>
+    <div class="right-buttons">
+      <% if @can_terminate_early %>
+        <button type="button" class="terminate-button" id="terminate-button">
+          診断を終了
+        </button>
       <% end %>
-
-      <div class="right-buttons">
-        <% if @can_terminate_early %>
-          <button type="button" class="terminate-button" id="terminate-button">
-            診断を終了
-          </button>
-        <% end %>
-      </div>
     </div>
   </div>
 
@@ -65,7 +60,6 @@
       const form = document.getElementById('answer-form');
       const terminateButton = document.getElementById('terminate-button');
       const body = document.body;
-      const container = document.querySelector('.container');
       const questionElement = document.querySelector('.question');
       const questionText = questionElement.textContent;
 
@@ -136,7 +130,7 @@
       function addSocialEffects(theme) {
         if (theme === 'dynamic') {
           // より活発なアニメーション
-          container.style.animation = 'pulse-dynamic 2s infinite';
+          body.style.animation = 'pulse-dynamic 2s infinite';
         }
       }
 
@@ -150,14 +144,14 @@
       function addEmotionalEffects(theme) {
         if (theme === 'emotional') {
           // より温かみのあるエフェクト
-          container.style.boxShadow = '0 20px 40px rgba(253, 121, 168, 0.2)';
+          body.style.boxShadow = '0 20px 40px rgba(253, 121, 168, 0.2)';
         }
       }
 
       function addStructuralEffects(theme) {
         if (theme === 'structured') {
           // より整然としたエフェクト
-          container.style.border = '2px solid var(--primary-color)';
+          body.style.border = '2px solid var(--primary-color)';
         }
       }
 
@@ -187,14 +181,14 @@
         const theme = body.className.match(/theme-(\w+)/);
         if (!theme) return;
 
-        // コンテナの初期アニメーション
-        container.style.opacity = '0';
-        container.style.transform = 'translateY(20px)';
+        // ボディの初期アニメーション
+        body.style.opacity = '0';
+        body.style.transform = 'translateY(20px)';
         
         setTimeout(() => {
-          container.style.transition = 'all 0.6s ease-out';
-          container.style.opacity = '1';
-          container.style.transform = 'translateY(0)';
+          body.style.transition = 'all 0.6s ease-out';
+          body.style.opacity = '1';
+          body.style.transform = 'translateY(0)';
         }, 100);
 
         // 質問カウンターのアニメーション（スケール変更を削除）
