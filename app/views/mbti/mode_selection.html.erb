@@ -7,6 +7,25 @@
   <%= stylesheet_link_tag 'mbti_index', 'data-turbo-track': 'reload' %>
   <%= stylesheet_link_tag 'mbti_mode_selection', 'data-turbo-track': 'reload' %>
   <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
+  <style>
+    /* フォールバック用のスタイル - CSSが読み込まれない場合の対策 */
+    .mode-option {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      color: white !important;
+    }
+    .mode-option.game-master-option {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%) !important;
+    }
+    .mode-description {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+    .mode-option h2 {
+      color: white !important;
+    }
+    .feature-item {
+      color: rgba(255, 255, 255, 0.9) !important;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
