@@ -141,13 +141,12 @@ body {
 
 .github-info {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 2rem;
   margin-top: 1rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .github-card {
@@ -230,6 +229,9 @@ body {
 
 .developer-info {
   margin-top: 1rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .developer-card {

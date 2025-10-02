@@ -60,23 +60,11 @@
     <div class="actions">
       <a href="<%= mbti_resume_path(session_id: @mbti_session.session_id) %>" class="action-button continue-button">続きから再開する</a>
       <a href="<%= mbti_path %>" class="action-button">ホームに戻る</a>
-      <button onclick="shareResult()" class="action-button secondary">結果を共有</button>
       <!-- <button id="analyze-button" class="action-button secondary" data-session-id="<%= @mbti_session.session_id %>">さらに分析する</button> -->
-      <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">🤖 AI診断で詳細分析</a>
+      <!-- <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">🤖 AI診断で詳細分析</a> -->
       <button id="personalized-report-button" class="action-button primary" data-session-id="<%= @mbti_session.session_id %>">あなただけの詳細レポート</button>
     </div>
-
-    <div class="share-section" id="share-section" style="display: none;">
-      <h3 class="share-title">結果を共有</h3>
-      <div class="share-text" id="share-text">
-        私のMBTIタイプは「<%= @result.mbti_type %>」です！<br>
-        <%= @result.description %><br><br>
-        あなたも診断してみませんか？<br>
-        <%= request.base_url %>
-      </div>
-      <button onclick="copyToClipboard()" class="copy-button">コピー</button>
-    </div>
-    <br>
+    
     <!-- あなただけの詳細レポート（空コンテナ。クリック時に内容を注入して表示） -->
     <div id="personalized-report-container" class="scores-container personalized-report" style="display: none;"></div>
   
@@ -87,32 +75,7 @@
       const meta = document.querySelector('meta[name="csrf-token"]');
       return meta ? meta.getAttribute('content') : '';
     }
-    function shareResult() {
-      const shareSection = document.getElementById('share-section');
-      if (shareSection.style.display === 'none') {
-        shareSection.style.display = 'block';
-        shareSection.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        shareSection.style.display = 'none';
-      }
-    }
-
-    function copyToClipboard() {
-      const shareText = document.getElementById('share-text').textContent;
-      navigator.clipboard.writeText(shareText).then(function() {
-        alert('結果をコピーしました！');
-      }, function(err) {
-        console.error('コピーに失敗しました: ', err);
-        // フォールバック
-        const textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('結果をコピーしました！');
-      });
-    }
+    
 
     // アニメーション効果
     document.addEventListener('DOMContentLoaded', function() {

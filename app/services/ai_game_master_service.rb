@@ -55,7 +55,16 @@ class AiGameMasterService
       story_state['inventory'] = []
       story_state['flags'] = {}
       story_state['history'] = []
+      story_state['dimension_counts'] = {
+        'E_I' => 0,
+        'S_N' => 0,
+        'T_F' => 0,
+        'J_P' => 0
+      }
     end
+
+    # 現在のストーリー状態をインスタンス変数に保存
+    @current_story_state = story_state
 
     prompt = build_game_master_prompt(story_state, story)
     Rails.logger.info "[AI GM] Scene Prompt Generated:\n#{prompt}"
@@ -67,7 +76,7 @@ class AiGameMasterService
           {
             role: 'system',
             content: 'あなたは、MBTI性格診断を目的としたインタラクティブ・ノベルの優れたゲームマスターです。' \
-                     '物語の進行管理と選択肢生成を担当し、プレイヤーの性格特性を測るための魅力的な物語を展開してください。' \
+                     '物語の進行管理と選択肢生成を担当し、性格特性を測るための魅力的な物語を展開してください。' \
                      '必ず指定のJSON形式で回答し、他のテキストは含めないでください。'
           },
           {
@@ -86,14 +95,14 @@ class AiGameMasterService
     generate_fallback_scene
   end
 
-  def process_player_choice(story_state, choice_value, progress_impact)
+  def process_player_choice(story_state, choice_value, progress_impact, choice_text = nil)
     # 進捗を安全に更新
     current_progress = story_state['progress'] || 0
     new_progress = [current_progress + progress_impact, 100].min
     story_state['progress'] = new_progress
 
     # 選択を履歴に追加
-    choice_description = generate_choice_description(choice_value, story_state)
+    choice_description = choice_text || generate_choice_description(choice_value, story_state)
     story_state['history'] ||= []
     story_state['history'] << choice_description
 
@@ -119,8 +128,11 @@ class AiGameMasterService
         messages: [
           {
             role: 'system',
-            content: 'あなたは物語作家です。プレイヤーの選択履歴を基に、壮大で満足感のあるエンディングを創作し、' \
+            content: 'あなたは物語作家です。選択履歴を基に、壮大で満足感のあるエンディングを創作し、' \
                      'その過程で示された性格特性を分析してください。' \
+                     'エンディングテキストでは「主人公」「あなた」「プレイヤー」などの主語を一切使用せず、' \
+                     '「旅人」「探検者」「勇者」「冒険者」などの物語に適した呼び方を使用するか、' \
+                     '主語を省略した文章構造にしてください。' \
                      '必ず指定のJSON形式で回答し、他のテキストは含めないでください。'
           },
           {
@@ -145,25 +157,40 @@ class AiGameMasterService
     <<~PROMPT
       # あなたへの指示
       あなたは、MBTI性格診断を目的としたインタラクティブ・ノベルの優れたゲームマスターです。
-      以下のルールと現在の物語の状態に基づいて、次の場面を描写し、プレイヤーの選択肢を生成してください。
+      以下のルールと現在の物語の状態に基づいて、次の場面を描写し、選択肢を生成してください。
 
       # ルール
       - 物語のジャンルは「#{story[:atmosphere]}」です。
-      - プレイヤーを少しずつクリア条件に近づけてください。
+      - 少しずつクリア条件に近づけてください。
       - 生成する選択肢は、必ずMBTIの4次元（E/I, S/N, T/F, J/P）のいずれかに関連付けてください。
-      - 物語の一貫性を保ち、プレイヤーの選択が物語に影響を与えるようにしてください。
+      - 物語の一貫性を保ち、選択が物語に影響を与えるようにしてください。
+      - 場面のテキストと選択肢は簡潔にし、「主人公」「あなた」などの主語は避けてください。
+      - 各場面で異なる次元の質問を生成し、バランスよく4つの次元をカバーしてください。
+      - 各次元は最大5回まで使用可能です。5回使用された次元は除外してください。
+      - 次元の選択指針：
+        * E_I（外向性/内向性）：人との関わり方、エネルギー源、社交性
+        * S_N（感覚/直感）：情報の受け取り方、現実vs可能性、詳細vs全体
+        * T_F（思考/感情）：意思決定の基準、論理vs価値観、客観vs主観
+        * J_P（判断/知覚）：生活スタイル、計画性vs柔軟性、構造vs適応
+      - 選択肢のテキストには、アルファベット表記（例：(T)、(F)、(E)、(I)など）を含めないでください。
+      - 選択肢は自然で分かりやすい表現にしてください。
       - 回答は必ず以下のJSON形式で出力してください。
 
       # 現在の物語の状態
       #{story_state.to_json}
 
+      # 利用可能な次元（使用回数に基づく）
+      #{available_dimensions = get_available_dimensions(story_state)}
+      利用可能な次元: #{available_dimensions.join(', ')}
+      選択された次元: #{selected_dimension = available_dimensions.sample}
+
       # 出力形式
       {
-        "scene_text": "（ここに次の場面のテキストを生成。物語の雰囲気を大切にし、プレイヤーを引き込む描写を心がけてください）",
-        "question_dimension": "T_F",
+        "scene_text": "（ここに次の場面のテキストを生成。物語の雰囲気を大切にし、引き込む描写を心がけてください）",
+        "question_dimension": "#{selected_dimension}",
         "choices": [
-          { "text": "（ここに思考(T)的な選択肢を生成）", "value": "T", "progress_impact": 5 },
-          { "text": "（ここに感情(F)的な選択肢を生成）", "value": "F", "progress_impact": 5 }
+          { "text": "（ここに選択肢Aを生成。アルファベット表記は含めない）", "value": "（Aの値：E, I, S, N, T, F, J, Pのいずれか）", "progress_impact": 5 },
+          { "text": "（ここに選択肢Bを生成。アルファベット表記は含めない）", "value": "（Bの値：E, I, S, N, T, F, J, Pのいずれか）", "progress_impact": 5 }
         ],
         "inventory_updates": ["新しいアイテム名"],
         "flag_updates": { "新しいフラグ": true }
@@ -174,7 +201,12 @@ class AiGameMasterService
   def build_ending_prompt(story_state)
     <<~PROMPT
       # エンディング生成の指示
-      プレイヤーが物語を完結させました。以下の情報を基に、壮大で満足感のあるエンディングを創作し、その過程で示された性格特性を分析してください。
+      物語が完結しました。以下の情報を基に、壮大で満足感のあるエンディングを創作し、その過程で示された性格特性を分析してください。
+
+      # 重要な注意事項
+      - エンディングテキストでは「主人公」「あなた」「プレイヤー」などの主語を一切使用しないでください
+      - 代わりに「旅人」「探検者」「勇者」「冒険者」などの物語に適した呼び方を使用するか、主語を省略した文章構造にしてください
+      - 文章は三人称視点で、客観的で物語的な表現を心がけてください
 
       # 物語の情報
       - 目標: #{story_state['goal']}
@@ -185,7 +217,7 @@ class AiGameMasterService
 
       # 出力形式
       {
-        "ending_text": "（ここに壮大なエンディングテキストを生成）",
+        "ending_text": "（ここに壮大なエンディングテキストを生成。主語は使用せず、物語的な表現で）",
         "mbti_analysis": "（ここに選択履歴を基にしたMBTI分析を生成）",
         "personality_insights": "（ここに性格の洞察を生成）",
         "achievement": "（ここに達成したことを簡潔にまとめる）"
@@ -201,6 +233,20 @@ class AiGameMasterService
       json_match = content.match(/\{[\s\S]*\}/)
       json_str = json_match ? json_match[0] : content
       data = JSON.parse(json_str)
+      
+      # 次元を強制的に設定（利用可能な次元からランダム選択）
+      available_dimensions = get_available_dimensions(@current_story_state)
+      selected_dimension = available_dimensions.sample
+      data['question_dimension'] = selected_dimension
+      
+      # 選択された次元の使用回数を更新
+      @current_story_state['dimension_counts'] ||= {
+        'E_I' => 0,
+        'S_N' => 0,
+        'T_F' => 0,
+        'J_P' => 0
+      }
+      @current_story_state['dimension_counts'][selected_dimension] += 1
 
       {
         scene_text: data['scene_text'],
@@ -252,24 +298,91 @@ class AiGameMasterService
   end
 
   def generate_fallback_scene
-    {
-      scene_text: 'あなたは神秘的な森の中にいます。前方に2つの道が見えます。',
-      question_dimension: 'E_I',
-      choices: [
-        { text: '左の道を選ぶ（外向的）', value: 'E', progress_impact: 5 },
-        { text: '右の道を選ぶ（内向的）', value: 'I', progress_impact: 5 }
-      ],
-      inventory_updates: [],
-      flag_updates: {}
-    }
+    # ランダムに次元を選択
+    dimensions = ['E_I', 'S_N', 'T_F', 'J_P']
+    selected_dimension = dimensions.sample
+    
+    case selected_dimension
+    when 'E_I'
+      {
+        scene_text: '神秘的な森の中。前方に2つの道が見える。',
+        question_dimension: 'E_I',
+        choices: [
+          { text: '左の道を選ぶ', value: 'E', progress_impact: 5 },
+          { text: '右の道を選ぶ', value: 'I', progress_impact: 5 }
+        ],
+        inventory_updates: [],
+        flag_updates: {}
+      }
+    when 'S_N'
+      {
+        scene_text: '古い建物の前。扉の向こうから不思議な音が聞こえる。',
+        question_dimension: 'S_N',
+        choices: [
+          { text: '音の正体を調べる', value: 'S', progress_impact: 5 },
+          { text: '音の意味を想像する', value: 'N', progress_impact: 5 }
+        ],
+        inventory_updates: [],
+        flag_updates: {}
+      }
+    when 'T_F'
+      {
+        scene_text: '困っている人を見かけた。助けるべきか迷っている。',
+        question_dimension: 'T_F',
+        choices: [
+          { text: '論理的に判断する', value: 'T', progress_impact: 5 },
+          { text: '感情で判断する', value: 'F', progress_impact: 5 }
+        ],
+        inventory_updates: [],
+        flag_updates: {}
+      }
+    when 'J_P'
+      {
+        scene_text: '予期せぬ状況に遭遇した。どう対応するか決めなければならない。',
+        question_dimension: 'J_P',
+        choices: [
+          { text: '計画を立てる', value: 'J', progress_impact: 5 },
+          { text: '柔軟に対応する', value: 'P', progress_impact: 5 }
+        ],
+        inventory_updates: [],
+        flag_updates: {}
+      }
+    end
   end
 
   def generate_fallback_ending
     {
-      ending_text: 'あなたは物語を無事に完結させました。',
-      mbti_analysis: 'あなたの選択から、バランスの取れた性格特性が読み取れます。',
-      personality_insights: '様々な状況で適切な判断を下す能力があります。',
-      achievement: '物語の主人公としての冒険を完遂しました。'
+      ending_text: '物語が無事に完結した。',
+      mbti_analysis: '選択から、バランスの取れた性格特性が読み取れる。',
+      personality_insights: '様々な状況で適切な判断を下す能力がある。',
+      achievement: '冒険を完遂した。'
     }
+  end
+
+  def get_available_dimensions(story_state)
+    # 次元の使用回数を取得
+    dimension_counts = story_state['dimension_counts'] || {
+      'E_I' => 0,
+      'S_N' => 0,
+      'T_F' => 0,
+      'J_P' => 0
+    }
+    
+    # 5回未満の次元のみを返す
+    available = dimension_counts.select { |_, count| count < 5 }.keys
+    
+    # 全ての次元が5回使用された場合は、全てをリセット
+    if available.empty?
+      available = ['E_I', 'S_N', 'T_F', 'J_P']
+      # 次元カウントをリセット
+      story_state['dimension_counts'] = {
+        'E_I' => 0,
+        'S_N' => 0,
+        'T_F' => 0,
+        'J_P' => 0
+      }
+    end
+    
+    available
   end
 end

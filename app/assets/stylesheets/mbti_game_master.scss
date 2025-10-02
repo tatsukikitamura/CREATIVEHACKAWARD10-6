@@ -3,18 +3,18 @@
 
 .game-master-container {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr;
   gap: 30px;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  min-height: 100vh;
-  background: rgba(255, 255, 255, 0.95);
+  
+  // テーマの背景色を使用するため、固定の背景色を削除
 }
 
 .game-header {
   grid-column: 1 / -1;
-  background: rgba(255, 255, 255, 0.95);
+  // テーマの背景色を使用するため、固定の背景色を削除
   border-radius: 20px;
   padding: 30px;
   margin-bottom: 20px;
@@ -23,7 +23,7 @@
 }
 
 .story-progress {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .progress-bar {
@@ -32,6 +32,7 @@
   height: 12px;
   overflow: hidden;
   margin-bottom: 10px;
+  border: 1px solid #dee2e6;
 }
 
 .progress-fill {
@@ -39,6 +40,7 @@
   height: 100%;
   border-radius: 10px;
   transition: width 1s ease;
+  min-width: 2px;
 }
 
 .progress-text {
@@ -59,7 +61,7 @@
 }
 
 .story-content {
-  background: rgba(255, 255, 255, 0.95);
+  // テーマの背景色を使用するため、固定の背景色を削除
   border-radius: 20px;
   padding: 40px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
@@ -77,6 +79,9 @@
   padding: 30px;
   border-radius: 15px;
   border-left: 5px solid #667eea;
+  white-space: pre-line;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .choices-container {
@@ -167,6 +172,36 @@
   z-index: 0;
 }
 
+.loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(102, 126, 234, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 .submit-container {
   text-align: center;
 }
@@ -197,7 +232,7 @@
 
 .inventory-section,
 .story-info {
-  background: rgba(255, 255, 255, 0.95);
+  // テーマの背景色を使用するため、固定の背景色を削除
   border-radius: 15px;
   padding: 25px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
@@ -245,7 +280,7 @@
   margin: 0 auto;
   padding: 20px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
 }
 
 .ending-header {
@@ -311,23 +346,51 @@
 
 .mbti-result-card {
   background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
+  color: white !important;
   border-radius: 15px;
   padding: 30px;
   text-align: center;
   margin-bottom: 30px;
 }
 
+.mbti-result-card * {
+  color: white !important;
+}
+
+.mbti-type-display {
+  color: white !important;
+}
+
 .mbti-type {
   font-size: 3rem;
   font-weight: bold;
   margin-bottom: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 .mbti-description {
   font-size: 1.2rem;
   opacity: 0.9;
   margin: 0;
+  color: white !important;
 }
 
 .analysis-content {
@@ -363,26 +426,40 @@
   backdrop-filter: blur(10px);
 }
 
+.summary-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.summary-toggle:hover {
+  transform: translateY(-2px);
+}
+
 .summary-title {
   color: #333;
   font-size: 1.8rem;
-  margin-bottom: 30px;
+  margin: 0;
   text-align: center;
+}
+
+.toggle-icon {
+  font-size: 1.2rem;
+  color: #667eea;
+  transition: transform 0.3s ease;
+  user-select: none;
 }
 
 .story-timeline {
   position: relative;
   padding-left: 30px;
-}
-
-.story-timeline::before {
-  content: '';
-  position: absolute;
-  left: 15px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, #667eea, #764ba2);
 }
 
 .timeline-item {
@@ -510,23 +587,59 @@
 }
 
 // レスポンシブデザイン
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .game-master-container {
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 10px;
   }
 
-  .game-header,
-  .story-content,
-  .inventory-section,
-  .story-info {
-    padding: 20px;
+  // 1200px以下では通常の表示
+  .main-content-area {
+    display: block;
+  }
+
+  .story-choices-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+  }
+
+  .scene-text {
+    margin-bottom: 30px;
+  }
+}
+
+@media (min-width: 1201px) {
+  .game-master-container {
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+  }
+
+  // 1200px以上では一列表示
+  .main-content-area {
+    display: block;
+  }
+
+  .story-choices-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
   }
 
   .scene-text {
     font-size: 1.1rem;
     padding: 20px;
+    margin-bottom: 30px;
+  }
+
+  .choices-container {
+    margin-top: 0;
   }
 
   .choice-item {
@@ -535,6 +648,27 @@
 
   .choice-label {
     font-size: 1rem;
+  }
+
+  .game-header {
+    padding: 15px;
+  }
+
+  .story-progress {
+    margin-bottom: 5px;
+  }
+
+  .progress-text {
+    font-size: 0.9rem;
+  }
+
+  .progress-bar {
+    height: 8px;
+  }
+
+  .inventory-section,
+  .story-info {
+    padding: 20px;
   }
 
   .ending-container {
@@ -560,5 +694,78 @@
   .action-button {
     width: 100%;
     max-width: 300px;
+  }
+}
+
+// ホームボタン
+.home-button-container {
+  text-align: center;
+  margin-top: 20px;
+  padding: 20px;
+}
+
+// デスクトップ版（1201px以上）では物語情報の下に表示
+@media (min-width: 1201px) {
+  .desktop-only {
+    display: block;
+  }
+  
+  .mobile-only {
+    display: none;
+  }
+  
+  .home-button-container.desktop-only {
+    margin-top: 15px;
+    padding: 15px 0;
+  }
+}
+
+// モバイル版（1200px以下）ではコンテナの下に表示
+@media (max-width: 1200px) {
+  .desktop-only {
+    display: none;
+  }
+  
+  .mobile-only {
+    display: block;
+  }
+}
+
+.home-button {
+  display: inline-block;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  text-decoration: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  color: white;
+  text-decoration: none;
+}
+
+.home-button:active {
+  transform: translateY(0);
+}
+
+// レスポンシブ対応
+@media (max-width: 768px) {
+  .home-button-container {
+    margin-top: 15px;
+    padding: 15px;
+  }
+  
+  .home-button {
+    padding: 10px 16px;
+    font-size: 0.8rem;
   }
 }

@@ -8,46 +8,41 @@
   <%= stylesheet_link_tag 'footer', 'data-turbo-track': 'reload' %>
 </head>
 <body>
-  <div class="container">
-    <div class="logo">🧠</div>
-    <h1 class="title">MBTI性格診断テスト</h1>
-    <p class="subtitle">AIが生成する質問に答えて、あなたの性格タイプを発見しましょう</p>
-    
-    <div class="description">
-      <h3>このテストについて</h3>
-      <ul>
-        <li>AIが動的に生成する12個の質問に回答</li>
-        <li>4つの次元で性格を分析（外向性/内向性、感覚/直感、思考/感情、判断/知覚）</li>
-        <li>16種類のMBTIタイプからあなたに最適なタイプを判定</li>
-        <li>詳細な分析結果とスコアを表示</li>
-        <li>所要時間：約5-10分</li>
-      </ul>
+  <div class="logo">🧠</div>
+  <h1 class="title">MBTI性格診断テスト</h1>
+  <p class="subtitle">AIが生成する質問に答えて、あなたの性格タイプを発見しましょう</p>
+  
+  <div class="description">
+    <h3>このテストについて</h3>
+    <ul>
+      <li>AIが動的に生成する12個の質問に回答</li>
+      <li>4つの次元で性格を分析（外向性/内向性、感覚/直感、思考/感情、判断/知覚）</li>
+      <li>16種類のMBTIタイプからあなたに最適なタイプを判定</li>
+      <li>詳細な分析結果とスコアを表示</li>
+      <li>所要時間：約5-10分</li>
+    </ul>
+  </div>
+
+  <div class="start-section">
+    <a href="<%= mbti_mode_selection_path(session_id: @session_id) %>" class="start-button">診断を開始</a>
+  </div>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🤖</div>
+      <h4>AI生成質問</h4>
+      <p>OpenAIが生成する個別化された質問</p>
     </div>
-
-    <div class="start-section">
-      <a href="<%= mbti_mode_selection_path(session_id: @session_id) %>" class="start-button">診断を開始</a>
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <h4>詳細分析</h4>
+      <p>各次元のスコアと詳細な説明</p>
     </div>
-
-    
-
-    <div class="features">
-      <div class="feature">
-        <div class="feature-icon">🤖</div>
-        <h4>AI生成質問</h4>
-        <p>OpenAIが生成する個別化された質問</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">📊</div>
-        <h4>詳細分析</h4>
-        <p>各次元のスコアと詳細な説明</p>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">⚡</div>
-        <h4>リアルタイム</h4>
-        <p>即座に結果を表示</p>
-      </div>
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h4>リアルタイム</h4>
+      <p>即座に結果を表示</p>
     </div>
-
   </div>
   
   <%= render 'shared/footer' %>

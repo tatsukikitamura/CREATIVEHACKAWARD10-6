@@ -284,6 +284,43 @@
       <p class="ai-subtitle">人工知能による詳細な性格分析</p>
     </div>
 
+    <!-- ゲームマスターの結果がある場合の表示 -->
+    <% if @mbti_session.story_mode == 'game_master' && @achievement.present? %>
+      <div class="ai-analysis-section">
+        <h3 class="analysis-title">
+          <span>🏆</span>
+          物語の結末
+        </h3>
+        <div class="analysis-content">
+          <p><strong><%= @achievement %></strong></p>
+          <% if @ending_text.present? %>
+            <br>
+            <p><%= simple_format(@ending_text) %></p>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @mbti_analysis.present? || @personality_insights.present? %>
+        <div class="ai-analysis-section">
+          <h3 class="analysis-title">
+            <span>🎭</span>
+            物語からの性格分析
+          </h3>
+          <div class="analysis-content">
+            <% if @mbti_analysis.present? %>
+              <p><strong>📊 MBTI分析</strong></p>
+              <p><%= @mbti_analysis %></p>
+            <% end %>
+            <% if @personality_insights.present? %>
+              <br>
+              <p><strong>🔍 性格の洞察</strong></p>
+              <p><%= @personality_insights %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
     <div class="mbti-type-display">
       <h2 class="mbti-type"><%= @result.mbti_type %></h2>
       <p class="mbti-description"><%= @result.description %></p>
@@ -347,9 +384,15 @@
     </div>
 
     <div style="text-align: center;">
-      <a href="<%= mbti_result_path(session_id: @mbti_session.session_id) %>" class="back-button">
-        ← 通常の結果に戻る
-      </a>
+      <% if @mbti_session.story_mode == 'game_master' %>
+        <a href="<%= mbti_game_master_ending_path %>?session_id=<%= @mbti_session.session_id %>" class="back-button">
+          ← 物語の結末に戻る
+        </a>
+      <% else %>
+        <a href="<%= mbti_result_path %>?session_id=<%= @mbti_session.session_id %>" class="back-button">
+          ← 通常の結果に戻る
+        </a>
+      <% end %>
     </div>
   
 

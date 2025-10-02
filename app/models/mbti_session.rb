@@ -46,6 +46,10 @@ class MbtiSession < ApplicationRecord
     save!
   end
 
+  def completed?
+    completed == true
+  end
+
   def current_question
     return nil if questions_array.empty? || current_question_index >= questions_array.length
 

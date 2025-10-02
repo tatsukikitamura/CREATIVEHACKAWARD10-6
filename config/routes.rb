@@ -18,8 +18,8 @@ Rails.application.routes.draw do
   get 'mbti/show', to: 'mbti#show'
   post 'mbti/answer', to: 'mbti#answer'
   post 'mbti/back', to: 'mbti#back'
-  get 'mbti/result', to: 'mbti#result'
-  get 'mbti/result_ai', to: 'mbti#result_ai'
+  get 'mbti/result', to: 'mbti#result', as: 'mbti_result'
+  get 'mbti/result_ai', to: 'mbti#result_ai', as: 'mbti_result_ai'
   get 'mbti/resume', to: 'mbti#resume'
   post 'mbti/analyze', to: 'mbti#analyze'
   post 'mbti/personalized_report', to: 'mbti#personalized_report'
@@ -27,9 +27,9 @@ Rails.application.routes.draw do
   post 'mbti/generate_music', to: 'mbti#generate_music'
 
   # AIゲームマスター方式のルート
-  get 'mbti/game_master', to: 'mbti#game_master'
-  post 'mbti/game_master/answer', to: 'mbti#game_master_answer'
-  get 'mbti/game_master/ending', to: 'mbti#game_master_ending'
+  get 'mbti/game_master', to: 'mbti#game_master', as: 'mbti_game_master'
+  post 'mbti/game_master/answer', to: 'mbti#game_master_answer', as: 'mbti_game_master_answer'
+  get 'mbti/game_master/ending', to: 'mbti#game_master_ending', as: 'mbti_game_master_ending'
 
   # プロジェクト情報ページ
   get 'info', to: 'info#info'

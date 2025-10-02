@@ -195,20 +195,57 @@ class MbtiController < ApplicationController
     session_id = params[:session_id] || session[:mbti_session_id]
 
     if session_id.blank?
+      Rails.logger.info "result_ai: session_id is blank"
       redirect_to mbti_path
       return
     end
 
     @mbti_session = MbtiSession.find_by(session_id: session_id)
 
-    if @mbti_session.nil? || !@mbti_session.completed?
+    if @mbti_session.nil?
+      Rails.logger.info "result_ai: mbti_session is nil"
       redirect_to mbti_path
       return
     end
 
-    @answers = @mbti_session.answers_array
+    Rails.logger.info "result_ai: completed=#{@mbti_session.completed}, completed?=#{@mbti_session.completed?}"
+
+    unless @mbti_session.completed?
+      Rails.logger.info "result_ai: session not completed"
+      redirect_to mbti_path
+      return
+    end
+
+    # ゲームマスターの場合はstory_stateから回答を取得
+    if @mbti_session.story_mode == 'game_master'
+      @answers = @mbti_session.story_state['history']&.map do |choice|
+        {
+          dimension: @mbti_session.story_state['current_scene']['question_dimension'],
+          choice: if choice.include?('外向')
+                    'A'
+                  elsif choice.include?('内向')
+                    'B'
+                  elsif choice.include?('感覚')
+                    'A'
+                  elsif choice.include?('直感')
+                    'B'
+                  elsif choice.include?('思考')
+                    'A'
+                  elsif choice.include?('感情')
+                    'B'
+                  elsif choice.include?('計画')
+                    'A'
+                  else
+                    choice.include?('柔軟') ? 'B' : 'A'
+                  end
+        }
+      end || []
+    else
+      @answers = @mbti_session.answers_array
+    end
 
     if @answers.empty?
+      Rails.logger.info "result_ai: answers is empty"
       redirect_to mbti_path
       return
     end
@@ -218,6 +255,15 @@ class MbtiController < ApplicationController
 
     # MBTIタイプを計算
     @result = MbtiResult.calculate_mbti_type(@answers)
+
+    # ゲームマスターの結果がある場合は取得
+    if @mbti_session.story_mode == 'game_master'
+      @story_state = @mbti_session.story_state
+      @achievement = @story_state['achievement'] if @story_state
+      @ending_text = @story_state['ending_text'] if @story_state
+      @mbti_analysis = @story_state['mbti_analysis'] if @story_state
+      @personality_insights = @story_state['personality_insights'] if @story_state
+    end
 
     # AI診断の詳細分析を生成
     # openai_service = OpenaiService.new
@@ -386,6 +432,8 @@ class MbtiController < ApplicationController
     @progress = @mbti_session.story_state['progress'] || 0
     @goal = @mbti_session.story_state['goal']
     @inventory = @mbti_session.story_state['inventory'] || []
+    @ui_theme = determine_ui_theme(@question_dimension)
+    Rails.logger.info "[DEBUG] Question dimension: #{@question_dimension}, UI theme: #{@ui_theme}"
   end
 
   def game_master_answer
@@ -396,6 +444,7 @@ class MbtiController < ApplicationController
     return redirect_to mbti_path if @mbti_session.nil?
 
     choice_value = params[:choice_value]
+    choice_text = params[:choice_text]
     progress_impact = params[:progress_impact]&.to_i || 5
 
     # AIゲームマスターサービスで選択を処理
@@ -404,7 +453,8 @@ class MbtiController < ApplicationController
     updated_story_state = ai_gm_service.process_player_choice(
       current_story_state,
       choice_value,
-      progress_impact
+      progress_impact,
+      choice_text
     )
 
     # セッションを更新
@@ -469,16 +519,16 @@ class MbtiController < ApplicationController
 
   def determine_ui_theme(dimension)
     case dimension
-    when 'EI'
+    when 'E_I', 'EI'
       # 外向性/内向性 - 活発 vs 静か
       'dynamic'
-    when 'SN'
+    when 'S_N', 'SN'
       # 感覚/直感 - 現実的 vs 抽象的
       'analytical'
-    when 'TF'
+    when 'T_F', 'TF'
       # 思考/感情 - 論理的 vs 感情的
       'emotional'
-    when 'JP'
+    when 'J_P', 'JP'
       # 判断/知覚 - 構造的 vs 柔軟
       'structured'
     else

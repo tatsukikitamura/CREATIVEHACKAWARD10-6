@@ -7,13 +7,13 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // テーマの背景色を使用するため、固定の背景色を削除
   min-height: 100vh;
   padding: 20px;
 }
 
 .container {
-  background: white;
+  // テーマの背景色を使用するため、固定の背景色を削除
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;

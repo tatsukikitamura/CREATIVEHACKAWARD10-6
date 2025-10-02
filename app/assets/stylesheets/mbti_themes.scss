@@ -148,7 +148,10 @@ body {
   background: var(--background-gradient);
 }
 
-.container {
+.container,
+.game-master-container,
+.story-content,
+.game-header {
   transition: all var(--animation-speed) var(--animation-style);
   background: var(--card-background);
   color: var(--text-color);
@@ -160,12 +163,14 @@ body {
   color: white;
 }
 
-.question {
+.question,
+.scene-text {
   transition: color var(--animation-speed) var(--animation-style);
   color: var(--text-color);
 }
 
-.option {
+.option,
+.choice-item {
   /* 色と影のみトランジション（サイズ・位置は固定） */
   transition: background-color var(--animation-speed) var(--animation-style),
               border-color var(--animation-speed) var(--animation-style),
@@ -174,12 +179,14 @@ body {
   background: var(--card-background);
 }
 
-.option:hover {
+.option:hover,
+.choice-item:hover {
   border-color: var(--primary-color);
   background: var(--hover-color);
 }
 
-.option.selected {
+.option.selected,
+.choice-item.selected {
   background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
   border-color: var(--primary-color);
   color: white;

@@ -10,13 +10,13 @@
 </head>
 <body>
   <div class="ending-container">
-    <!-- ヘッダー -->
-    <div class="ending-header">
-      <div class="achievement-badge">
-        <h1>🏆 物語完結！</h1>
-        <p class="achievement-text"><%= @achievement %></p>
-      </div>
-    </div>
+     <!-- ヘッダー -->
+     <div style="text-align: center; margin-bottom: 40px;">
+      <br>
+       <h1>🏆 物語完結！</h1>
+       <br>
+       <p><%= @achievement %></p>
+     </div>
 
     <!-- エンディングテキスト -->
     <div class="ending-content">
@@ -49,40 +49,52 @@
       </div>
     </div>
 
-    <!-- 物語の振り返り -->
-    <div class="story-summary">
-      <h2 class="summary-title">📖 あなたの物語の軌跡</h2>
-      <div class="story-timeline">
-        <% @story_state['history']&.each_with_index do |choice, index| %>
-          <div class="timeline-item">
-            <div class="timeline-marker"><%= index + 1 %></div>
-            <div class="timeline-content">
-              <p><%= choice %></p>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
+     <!-- 物語の振り返り -->
+     <div class="story-summary">
+       <button class="summary-toggle" onclick="toggleStoryTimeline()">
+         <h2 class="summary-title">📖 あなたの物語の軌跡</h2>
+         <span class="toggle-icon" id="timeline-icon">▼</span>
+       </button>
+       <br>
+       <div class="story-timeline" id="story-timeline" style="display: none;">
+         <% @story_state['history']&.each_with_index do |choice, index| %>
+           <div class="timeline-item" style="justify-content: center;">
+             <div class="timeline-marker"><%= index + 1 %></div>
+             <div class="timeline-content">
+               <p>
+                 <% if choice.include?('を選択') %>
+                   <%# 古い形式のデータを変換 %>
+                   <% 
+                     # より自然な表現に変換
+                     converted_choice = choice.gsub('を選択', '')
+                     converted_choice = converted_choice.gsub('外向的な行動', '外向的な選択')
+                     converted_choice = converted_choice.gsub('内向的な行動', '内向的な選択')
+                     converted_choice = converted_choice.gsub('感覚的な判断', '感覚的な選択')
+                     converted_choice = converted_choice.gsub('直感的な判断', '直感的な選択')
+                     converted_choice = converted_choice.gsub('論理的な思考', '論理的な選択')
+                     converted_choice = converted_choice.gsub('感情的な判断', '感情的な選択')
+                     converted_choice = converted_choice.gsub('計画的な行動', '計画的な選択')
+                     converted_choice = converted_choice.gsub('柔軟な対応', '柔軟な選択')
+                   %>
+                   <%= converted_choice %>
+                 <% else %>
+                   <%# 新しい形式のデータはそのまま表示 %>
+                   <%= choice %>
+                 <% end %>
+               </p>
+             </div>
+           </div>
+         <% end %>
+       </div>
+     </div>
 
-    <!-- アクションボタン -->
-    <div class="ending-actions">
-      <a href="<%= mbti_game_master_path(story_mode: @mbti_session.story_mode) %>" class="action-button primary">新しい物語を始める</a>
-      <a href="<%= mbti_path %>" class="action-button secondary">通常の診断に戻る</a>
-      <button onclick="shareStory()" class="action-button secondary">物語を共有</button>
-    </div>
+     <!-- アクションボタン -->
+     <div class="ending-actions">
+      <!-- <a href="<%= mbti_result_ai_path %>?session_id=<%= @mbti_session.session_id %>" class="action-button primary">AI診断結果を見る</a> -->
+       <a href="<%= mbti_mode_selection_path %>" class="action-button secondary">新しい物語を始める</a>
+       <a href="<%= mbti_path %>" class="action-button secondary">通常の診断に戻る</a>
+     </div>
 
-    <!-- 共有セクション -->
-    <div class="share-section" id="share-section" style="display: none;">
-      <h3 class="share-title">物語を共有</h3>
-      <div class="share-text" id="share-text">
-        私のMBTIタイプは「<%= @result.mbti_type %>」です！<br>
-        <%= @result.description %><br><br>
-        AIゲームマスターによる物語診断で判明しました。<br>
-        あなたも体験してみませんか？<br>
-        <%= request.base_url %>/mbti/game_master
-      </div>
-      <button onclick="copyToClipboard()" class="copy-button">コピー</button>
-    </div>
   </div>
 
   <script>
@@ -111,31 +123,30 @@
       });
     });
 
-    function shareStory() {
-      const shareSection = document.getElementById('share-section');
-      if (shareSection.style.display === 'none') {
-        shareSection.style.display = 'block';
-        shareSection.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        shareSection.style.display = 'none';
-      }
-    }
 
-    function copyToClipboard() {
-      const shareText = document.getElementById('share-text').textContent;
-      navigator.clipboard.writeText(shareText).then(function() {
-        alert('物語をコピーしました！');
-      }, function(err) {
-        console.error('コピーに失敗しました: ', err);
-        // フォールバック
-        const textArea = document.createElement('textarea');
-        textArea.value = shareText;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('物語をコピーしました！');
-      });
+    function toggleStoryTimeline() {
+      const timeline = document.getElementById('story-timeline');
+      const icon = document.getElementById('timeline-icon');
+      
+      if (timeline.style.display === 'none') {
+        timeline.style.display = 'block';
+        icon.textContent = '▲';
+        
+        // タイムラインのアニメーション
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        timelineItems.forEach((item, index) => {
+          item.style.opacity = '0';
+          item.style.transform = 'translateX(-30px)';
+          setTimeout(() => {
+            item.style.transition = 'all 0.5s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateX(0)';
+          }, 100 + (index * 150));
+        });
+      } else {
+        timeline.style.display = 'none';
+        icon.textContent = '▼';
+      }
     }
   </script>
   
