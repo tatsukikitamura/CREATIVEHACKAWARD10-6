@@ -36,7 +36,7 @@ class AiPhotoService
     generate_fallback_images(mbti_type)
   end
 
-  # 画像を生成（gpt-image-1 を優先、失敗時にリトライとフォールバック）
+  # 画像を生成（DALL·E 2 を使用）
   def generate_image_with_dalle(prompt, size = '1024x1024')
     Rails.logger.info "Generating image with prompt: #{prompt}"
 
@@ -44,48 +44,45 @@ class AiPhotoService
     safe_prompt = prompt.to_s.strip
     safe_prompt = safe_prompt[0, 1800] if safe_prompt.length > 1800
 
-    models = ['gpt-image-1', 'dall-e-2']
+    model = 'dall-e-2'
     last_error = nil
 
-    models.each do |model|
-      2.times do |attempt|
-        begin
-          sleep(0.5 * (2**attempt)) if attempt.positive? # エクスポネンシャルバックオフ
+    2.times do |attempt|
+      begin
+        sleep(0.5 * (2**attempt)) if attempt.positive? # エクスポネンシャルバックオフ
 
-          response = @openai_service.client.images.generate(
-            parameters: {
-              model: model,
-              prompt: safe_prompt,
-              size: size,
-              n: 1,
-              quality: model == 'gpt-image-1' ? 'low' : nil
-            }.compact
-          )
+        response = @openai_service.client.images.generate(
+          parameters: {
+            model: model,
+            prompt: safe_prompt,
+            size: size,
+            n: 1
+          }
+        )
 
-          # URL または base64 のいずれかに対応
-          image_url = response.dig('data', 0, 'url')
-          if image_url
-            Rails.logger.info "Image generated successfully (#{model}): #{image_url}"
-            return image_url
-          end
-
-          b64 = response.dig('data', 0, 'b64_json')
-          if b64
-            data_uri = "data:image/png;base64,#{b64}"
-            Rails.logger.info "Image generated (base64, #{model})"
-            return data_uri
-          end
-
-          Rails.logger.warn "No image data in response (#{model}): #{response}"
-        rescue Faraday::ServerError, Faraday::TimeoutError => e
-          last_error = e
-          Rails.logger.warn "Transient error on #{model} attempt #{attempt + 1}: #{e.message}"
-          next
-        rescue StandardError => e
-          last_error = e
-          Rails.logger.error "Image generation error on #{model}: #{e.message}"
-          break
+        # URL または base64 のいずれかに対応
+        image_url = response.dig('data', 0, 'url')
+        if image_url
+          Rails.logger.info "Image generated successfully (#{model}): #{image_url}"
+          return image_url
         end
+
+        b64 = response.dig('data', 0, 'b64_json')
+        if b64
+          data_uri = "data:image/png;base64,#{b64}"
+          Rails.logger.info "Image generated (base64, #{model})"
+          return data_uri
+        end
+
+        Rails.logger.warn "No image data in response (#{model}): #{response}"
+      rescue Faraday::ServerError, Faraday::TimeoutError => e
+        last_error = e
+        Rails.logger.warn "Transient error on #{model} attempt #{attempt + 1}: #{e.message}"
+        next
+      rescue StandardError => e
+        last_error = e
+        Rails.logger.error "Image generation error on #{model}: #{e.message}"
+        break
       end
     end
 

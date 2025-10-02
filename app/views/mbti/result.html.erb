@@ -58,12 +58,13 @@
     </div>
 
     <div class="actions">
+      <button id="personalized-report-button" class="action-button primary" data-session-id="<%= @mbti_session.session_id %>">あなただけのレポート</button>
+      <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">結果を音楽,写真で生成</a>
       <a href="<%= mbti_resume_path(session_id: @mbti_session.session_id) %>" class="action-button continue-button">続きから再開する</a>
       <a href="<%= mbti_path %>" class="action-button">ホームに戻る</a>
-      <a href="<%= mbti_result_ai_path(session_id: @mbti_session.session_id) %>" class="action-button ai-button">🤖 AI診断で詳細分析</a> 
-      <button id="personalized-report-button" class="action-button primary" data-session-id="<%= @mbti_session.session_id %>">あなただけの詳細レポート</button>
     </div>
-    
+    <br>
+    <br>
     <!-- あなただけの詳細レポート（空コンテナ。クリック時に内容を注入して表示） -->
     <div id="personalized-report-container" class="scores-container personalized-report" style="display: none;"></div>
   
