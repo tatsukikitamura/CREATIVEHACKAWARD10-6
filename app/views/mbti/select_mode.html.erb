@@ -313,9 +313,7 @@
           </div>
         </div>
         
-        <button type="submit" class="continue-button" id="continue-button">
-          選択したモードで診断を開始
-        </button>
+        
       <% end %>
       
       <div class="back-section">
@@ -327,7 +325,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const modeCards = document.querySelectorAll('.mode-card');
-      const continueButton = document.getElementById('continue-button');
       const selectedModeInput = document.getElementById('selected-mode');
       
       modeCards.forEach(card => {
@@ -342,17 +339,11 @@
           const mode = this.dataset.mode;
           selectedModeInput.value = mode;
           
-          // クリエイターモードの場合は特別な処理
-          if (mode === 'creator') {
-            continueButton.textContent = '物語を作成する';
-            continueButton.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a24)';
-          } else {
-            continueButton.textContent = '選択したモードで診断を開始';
-            continueButton.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+          // 選択と同時にフォーム送信（ボタン押下不要）
+          const form = document.getElementById('mode-form');
+          if (form) {
+            form.submit();
           }
-          
-          // ボタンを有効化
-          continueButton.classList.add('active');
         });
       });
     });
