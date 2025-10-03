@@ -7,8 +7,8 @@ class AiPhotoService
   end
 
   # MBTIタイプと回答に基づいて画像のプロンプトを生成
-  def generate_image_prompts(mbti_type, answers)
-    prompt = build_image_prompt(mbti_type, answers)
+  def generate_image_prompts(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
+    prompt = build_image_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
         model: 'gpt-3.5-turbo',
@@ -91,8 +91,8 @@ class AiPhotoService
   end
 
   # 複数の画像を生成
-  def generate_multiple_images(mbti_type, answers)
-    prompts = generate_image_prompts(mbti_type, answers)
+  def generate_multiple_images(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
+    prompts = generate_image_prompts(mbti_type, answers, story_mode, custom_story, story_context)
     images = []
 
     prompts[:prompts].each do |prompt_data|
@@ -220,14 +220,20 @@ class AiPhotoService
 
   private
 
-  def build_image_prompt(mbti_type, answers)
+  def build_image_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
     answer_summary = answers.map { |a| "#{a[:dimension]}: #{a[:choice]}" }.join(', ')
+    
+    # 物語の設定を構築
+    story_context_text = build_story_context_for_images(story_mode, custom_story, story_context)
 
     <<~PROMPT
       MBTIタイプ: #{mbti_type}
       回答内容: #{answer_summary}
+      
+      物語設定:
+      #{story_context_text}
 
-      この人の性格特性を表現する3つの異なる画像のプロンプトを生成してください：
+      この人の性格特性と物語の文脈を表現する3つの異なる画像のプロンプトを生成してください：
 
       ## 抽象的な表現
       [性格の本質を抽象的に表現した画像のプロンプト]
@@ -245,6 +251,7 @@ class AiPhotoService
       - 抽象的な表現を重視し、具体的な物体や人物よりも概念的な視覚表現を心がけてください
       - 色彩、形状、質感、光と影の効果を活用して感情や性格を表現してください
       - 象徴的で詩的なイメージを生成し、直感的に理解できる視覚的メタファーを重視してください
+      - 物語の展開に応じて、困難な決断の場面ではシャープな線を追加し、悲しい結末では深みのある色彩を使用してください
       - プロンプトの最後に必ず「Abstract, symbolic, conceptual, artistic representation」を追加してください
     PROMPT
   end
@@ -314,5 +321,89 @@ class AiPhotoService
         }
       ]
     }
+  end
+
+  # 画像生成用の物語文脈を構築
+  def build_story_context_for_images(story_mode, custom_story, story_context)
+    base_context = build_base_story_context(story_mode, custom_story)
+    enhanced_context = enhance_image_context_with_emotions(base_context, story_context)
+    enhanced_context
+  end
+
+  # 基本的な物語設定を構築
+  def build_base_story_context(story_mode, custom_story)
+    story_settings = {
+      'horror' => {
+        atmosphere: 'ホラー・スリラー',
+        setting: '暗い夜道、古い屋敷、謎めいた出来事',
+        tone: '緊張感と恐怖感のある状況',
+        visual_style: '暗い色彩、シャープなコントラスト、神秘的な雰囲気'
+      },
+      'adventure' => {
+        atmosphere: 'アドベンチャー・冒険',
+        setting: '未知の土地、宝物探し、危険な挑戦',
+        tone: 'エキサイティングで冒険的な状況',
+        visual_style: '鮮やかな色彩、ダイナミックな構図、エネルギッシュな雰囲気'
+      },
+      'mystery' => {
+        atmosphere: 'ミステリー・推理',
+        setting: '謎めいた事件、隠された真実、複雑な人間関係',
+        tone: '推理と分析が必要な状況',
+        visual_style: '落ち着いた色彩、複雑な構図、知的な雰囲気'
+      },
+      'creator' => {
+        atmosphere: custom_story&.dig('mood') || 'ドラマチック',
+        setting: custom_story&.dig('setting') || '未知の世界',
+        tone: custom_story&.dig('theme') || '冒険的な状況',
+        character: custom_story&.dig('character_background'),
+        visual_style: custom_story&.dig('visual_style') || '創造的で独創的な雰囲気'
+      }
+    }
+
+    story = story_settings[story_mode] || story_settings['adventure']
+
+    context = "舞台: #{story[:setting]}, 雰囲気: #{story[:atmosphere]}, トーン: #{story[:tone]}, 視覚的スタイル: #{story[:visual_style]}"
+    context += ", キャラクター背景: #{story[:character]}" if story[:character]
+
+    context
+  end
+
+  # 物語の展開による感情的な文脈を画像生成に反映
+  def enhance_image_context_with_emotions(base_context, story_context)
+    return base_context unless story_context
+
+    emotional_analysis = analyze_story_emotions_for_images(story_context)
+    return base_context unless emotional_analysis
+
+    "#{base_context}\n\n物語の感情的な展開による視覚的調整:\n#{emotional_analysis}"
+  end
+
+  # 物語の展開から感情的な要素を分析（画像生成用）
+  def analyze_story_emotions_for_images(story_context)
+    return nil unless story_context.is_a?(Hash)
+
+    emotional_elements = []
+
+    # 困難な決断の場面を検出
+    if story_context['difficult_decisions'] || story_context['challenges']
+      emotional_elements << "困難な決断: 主人公が重要な選択を迫られる場面では、アートにシャープな線とコントラストの強い色彩を追加し、緊張感を視覚的に表現"
+    end
+
+    # 悲しい結末を検出
+    if story_context['sad_ending'] || story_context['tragic_elements']
+      emotional_elements << "悲しい結末: 物語が悲しい結末を迎えた場合、アートの色彩をより深みのあるトーンに調整し、メランコリックな雰囲気を表現"
+    end
+
+    # 勝利や成功の場面を検出
+    if story_context['victory'] || story_context['success']
+      emotional_elements << "勝利の瞬間: 主人公が困難を乗り越えた場面では、アートに光と希望の要素を追加し、明るくエネルギッシュな色彩を使用"
+    end
+
+    # 神秘的な要素を検出
+    if story_context['mystery'] || story_context['magical_elements']
+      emotional_elements << "神秘的な要素: 物語に神秘的な要素がある場合、アートに幻想的な色彩と抽象的な形状を追加し、超現実的な雰囲気を表現"
+    end
+
+    emotional_elements.join("\n")
   end
 end

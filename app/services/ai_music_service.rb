@@ -7,8 +7,8 @@ class AiMusicService
   end
 
   # MBTIタイプと回答に基づいて音楽の提案を生成
-  def generate_music_recommendations(mbti_type, answers, story_mode = 'adventure', custom_story = nil)
-    prompt = build_music_prompt(mbti_type, answers, story_mode, custom_story)
+  def generate_music_recommendations(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
+    prompt = build_music_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
         model: 'gpt-3.5-turbo',
@@ -38,8 +38,8 @@ class AiMusicService
   end
 
   # 音楽プレイリストの情報を生成
-  def generate_playlist_info(mbti_type, answers, story_mode = 'adventure', custom_story = nil)
-    prompt = build_playlist_prompt(mbti_type, answers, story_mode, custom_story)
+  def generate_playlist_info(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
+    prompt = build_playlist_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
         model: 'gpt-3.5-turbo',
@@ -70,7 +70,7 @@ class AiMusicService
 
   private
 
-  def build_music_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil)
+  def build_music_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
     # 回答の詳細な要約を作成
     answer_details = answers.map do |a|
       choice_text = a[:choice] == 'A' ? a[:optionA] : a[:optionB]
@@ -78,13 +78,14 @@ class AiMusicService
     end.join("\n")
 
     # 物語の設定を構築
-    story_context = build_story_context(story_mode, custom_story)
+    base_story_context = build_story_context(story_mode, custom_story)
+    enhanced_story_context = enhance_story_context_with_emotions(base_story_context, story_context)
 
     <<~PROMPT
       MBTIタイプ: #{mbti_type}
 
       物語設定:
-      #{story_context}
+      #{enhanced_story_context}
 
       回答履歴:
       #{answer_details}
@@ -105,10 +106,11 @@ class AiMusicService
       - テンポ: 速い/中程度/遅い（物語のペースに合わせて）
       - ムード: 明るい/落ち着いた/エネルギッシュ/静か（物語の雰囲気に合わせて）
       - 楽器: 主な楽器構成（物語の世界観に合う楽器）
+      - 動的調整: 物語の展開に応じた音楽の変化（緊張感、悲しみ、喜びなど）
     PROMPT
   end
 
-  def build_playlist_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil)
+  def build_playlist_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
     # 回答の詳細な要約を作成
     answer_details = answers.map do |a|
       choice_text = a[:choice] == 'A' ? a[:optionA] : a[:optionB]
@@ -116,13 +118,14 @@ class AiMusicService
     end.join("\n")
 
     # 物語の設定を構築
-    story_context = build_story_context(story_mode, custom_story)
+    base_story_context = build_story_context(story_mode, custom_story)
+    enhanced_story_context = enhance_story_context_with_emotions(base_story_context, story_context)
 
     <<~PROMPT
       MBTIタイプ: #{mbti_type}
 
       物語設定:
-      #{story_context}
+      #{enhanced_story_context}
 
       回答履歴:
       #{answer_details}
@@ -140,6 +143,9 @@ class AiMusicService
 
       ## プレイリストの雰囲気
       [全体的なムードと特徴（物語の世界観と一致する雰囲気）]
+
+      ## 物語の展開による音楽の変化
+      [物語の重要な場面（困難な決断、悲しい結末など）に応じた音楽の動的調整]
     PROMPT
   end
 
@@ -238,5 +244,44 @@ class AiMusicService
     context += ", キャラクター背景: #{story[:character]}" if story[:character]
 
     context
+  end
+
+  # 物語の展開による感情的な文脈を分析し、音楽生成に反映
+  def enhance_story_context_with_emotions(base_context, story_context)
+    return base_context unless story_context
+
+    emotional_analysis = analyze_story_emotions(story_context)
+    return base_context unless emotional_analysis
+
+    "#{base_context}\n\n物語の感情的な展開:\n#{emotional_analysis}"
+  end
+
+  # 物語の展開から感情的な要素を分析
+  def analyze_story_emotions(story_context)
+    return nil unless story_context.is_a?(Hash)
+
+    emotional_elements = []
+
+    # 困難な決断の場面を検出
+    if story_context['difficult_decisions'] || story_context['challenges']
+      emotional_elements << "困難な決断: 主人公が重要な選択を迫られる場面では、緊張感を反映してBPMを少し速め、音楽にドラマチックな要素を追加"
+    end
+
+    # 悲しい結末を検出
+    if story_context['sad_ending'] || story_context['tragic_elements']
+      emotional_elements << "悲しい結末: 物語が悲しい結末を迎えた場合、音楽にメランコリックな要素を加え、アートの色彩をより深みのあるトーンに調整"
+    end
+
+    # 勝利や成功の場面を検出
+    if story_context['victory'] || story_context['success']
+      emotional_elements << "勝利の瞬間: 主人公が困難を乗り越えた場面では、音楽をより明るくエネルギッシュにし、アートに光と希望の要素を追加"
+    end
+
+    # 神秘的な要素を検出
+    if story_context['mystery'] || story_context['magical_elements']
+      emotional_elements << "神秘的な要素: 物語に神秘的な要素がある場合、音楽にアンビエントな要素を加え、アートに幻想的な色彩と抽象的な形状を追加"
+    end
+
+    emotional_elements.join("\n")
   end
 end
