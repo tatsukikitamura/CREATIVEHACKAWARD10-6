@@ -46,7 +46,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -93,7 +93,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -139,7 +139,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -180,7 +180,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -233,7 +233,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'あなたはMBTIと性格分析の専門家です。常に指定のJSONのみで返答してください。' },
           { role: 'user', content: prompt }
@@ -305,7 +305,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
