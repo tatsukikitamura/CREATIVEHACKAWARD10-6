@@ -46,7 +46,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4.1-mini',
         messages: [
           {
             role: 'system',
@@ -180,7 +180,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4.1-mini',
         messages: [
           {
             role: 'system',
@@ -305,7 +305,7 @@ class OpenaiService
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4.1-mini',
         messages: [
           {
             role: 'system',
