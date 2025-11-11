@@ -1,0 +1,72 @@
+ポートフォリオ（就活用）
+
+- 使用言語: Ruby, JavaScript, 
+- フレームワーク: Ruby on Rails, Hotwire, Stimulus, （必要に応じて追記）
+- その他: OpenAI API, Docker, PostgreSQL, Redis
+
+【コアスキル】
+- Ruby on Rails を用いた RESTful API / SSR 構築
+- サービス設計（ルーティング、モデル設計、バリデーション、RDB スキーマ設計）
+- OpenAI API 連携（プロンプト設計、フォールバック実装、レスポンスのパース）
+- インフラ基礎（Docker / docker-compose によるローカル/本番環境の整備）
+- UI 実装（ERB / CSS / Stimulus によるインタラクション）
+
+【代表プロジェクト】
+プロジェクト名: MBTI × 生成AI 体験アプリ
+- 概要: ユーザーの回答から MBTI タイプを推定し、AI が音楽/写真/ストーリーなどの生成体験を提供する Web アプリ。
+- 役割: フルスタック（設計、実装、プロンプト設計、運用）
+- 技術: Ruby on Rails, OpenAI API, Docker, PostgreSQL, Hotwire/Stimulus, SCSS
+- 主要機能:
+  - MBTI 診断（`app/models/mbti_question.rb`, `app/models/mbti_result.rb`）
+  - AI 生成サービス層（`app/services/ai_*_service.rb`, `app/services/openai_service.rb`）
+  - ストーリーモード/セッション管理（`app/models/mbti_session.rb`, `db/migrate/*mbti_sessions.rb`）
+  - 画面: 診断/結果/AI 結果/モード選択（`app/views/mbti/*.html.erb`）
+  - 例外時フォールバック（`app/services/openai_fallbacks.rb`）とパーサ（`app/services/openai_parsers.rb`）
+  - アセット/スタイル整備（`app/assets/stylesheets/*.scss`）
+  - ルーティング/コントローラ（`config/routes.rb`, `app/controllers/mbti_controller.rb`）
+ - 工夫点:
+  - OpenAI 呼び出しの共通化とフォールバックで可用性を確保
+  - プロンプトを用途ごとに分離（音楽/写真/ストーリー）し保守性を向上（`openai_prompts.rb`）
+  - セッションテーブルでモード/状態を管理し、体験の継続性を担保
+  - UI は ERB + SCSS で軽量に、体験部分は Stimulus で最小限の動的化
+
+【技術詳細（抜粋）】
+- サービス層設計:
+  - `OpenAIService`: API クライアントの単一責務化、レート制御/エラーハンドリング
+  - `AIGameMasterService` / `AIMusicService` / `AIPhotoService`: ドメインごとにプロンプト/パースを分離
+  - `OpenAIFallbacks`: API 失敗時に返すダミー/テンプレート応答で UX を維持
+  - `OpenAIParsers`: 生成テキストの構造化（JSON ライク/タグ抽出）
+- データモデル:
+  - `MBTISession`: ストーリーモード、状態、カスタムストーリーを持つ
+  - `MBTIResult`: MBTI タイプ、説明、推奨コンテンツ紐付け
+- テスト/品質:
+  - Rails 標準テストを活用（`test/models/mbti_session_test.rb` 他）
+  - ログ/例外通知（本番環境想定の設定は `config/environments/production.rb`）
+
+【成果】
+- 企画から実装/運用まで個人でエンドツーエンドに遂行
+- 生成 AI の利用で、診断→体験生成までの一貫したユーザーフローを実装
+- フォールバック設計により、API 障害時もページ崩壊を回避
+
+【ソースコード】
+- リポジトリ: このポートフォリオ内（`/Users/kitamuratatuki/CREATIVEHACKAWARD10-6`）
+
+【動作環境】
+- 必要: Docker / docker-compose, Ruby 3 系（mise 管理あり）, Node（アセット処理）
+- 起動（例）:
+  1. `docker compose up -d`
+  2. `bin/rails db:setup`
+  3. `bin/rails s`
+
+【今後の展望】
+- 生成結果のキャッシュ/再利用でコスト最適化
+- マルチモーダル（音声/画像）出力の拡充
+- プロンプトと評価指標の自動回帰テスト整備
+
+【その他プロジェクト（例）】
+- 小規模 API サーバ構築（Rails / Postgres / Redis）
+- フロントエンド SPA（React/TypeScript）との連携 PoC
+
+【一言】
+ユーザー体験と運用を見据えた設計・実装が得意です。生成 AI を活用しつつ、安定性と保守性の両立を重視しています。
+
