@@ -105,7 +105,9 @@ class MbtiSession
 
   # story_stateとcustom_storyを文字列キーでアクセスできるようにする
   def story_state
-    value = read_attribute(:story_state)
+    # ActiveModel::Attributes を使っているため ActiveRecord の read_attribute は存在しない。
+    # ここでは attribute 定義によりセットされるインスタンス変数を直接参照する。
+    value = instance_variable_get(:@story_state)
     return {} unless value
 
     # シンボルキーを文字列キーに変換（コントローラーで文字列キーでアクセスしているため）
@@ -119,11 +121,11 @@ class MbtiSession
                        else
                          value
                        end
-    write_attribute(:story_state, normalized_value)
+    instance_variable_set(:@story_state, normalized_value)
   end
 
   def custom_story
-    value = read_attribute(:custom_story)
+    value = instance_variable_get(:@custom_story)
     return {} unless value
 
     value.is_a?(Hash) ? symbolize_to_string_keys(value) : value
@@ -136,7 +138,7 @@ class MbtiSession
                        else
                          value
                        end
-    write_attribute(:custom_story, normalized_value)
+    instance_variable_set(:@custom_story, normalized_value)
   end
 
   # シンボルキーを文字列キーに変換（再帰的）

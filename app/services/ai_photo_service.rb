@@ -48,42 +48,48 @@ class AiPhotoService
     last_error = nil
 
     2.times do |attempt|
-      begin
-        sleep(0.5 * (2**attempt)) if attempt.positive? # エクスポネンシャルバックオフ
+      sleep(0.5 * (2**attempt)) if attempt.positive? # エクスポネンシャルバックオフ
 
-        response = @openai_service.client.images.generate(
-          parameters: {
-            model: model,
-            prompt: safe_prompt,
-            size: size,
-            n: 1
-          }
-        )
+      response = @openai_service.client.images.generate(
+        parameters: {
+          model: model,
+          prompt: safe_prompt,
+          size: size,
+          n: 1
+        }
+      )
 
-        # URL または base64 のいずれかに対応
-        image_url = response.dig('data', 0, 'url')
-        if image_url
-          Rails.logger.info "Image generated successfully (#{model}): #{image_url}"
-          return image_url
-        end
-
-        b64 = response.dig('data', 0, 'b64_json')
-        if b64
-          data_uri = "data:image/png;base64,#{b64}"
-          Rails.logger.info "Image generated (base64, #{model})"
-          return data_uri
-        end
-
-        Rails.logger.warn "No image data in response (#{model}): #{response}"
-      rescue Faraday::ServerError, Faraday::TimeoutError => e
-        last_error = e
-        Rails.logger.warn "Transient error on #{model} attempt #{attempt + 1}: #{e.message}"
-        next
-      rescue StandardError => e
-        last_error = e
-        Rails.logger.error "Image generation error on #{model}: #{e.message}"
-        break
+      # URL または base64 のいずれかに対応
+      image_url = response.dig('data', 0, 'url')
+      if image_url
+        Rails.logger.info "Image generated successfully (#{model}): #{image_url}"
+        return image_url
       end
+
+      b64 = response.dig('data', 0, 'b64_json')
+      if b64
+        data_uri = "data:image/png;base64,#{b64}"
+        Rails.logger.info "Image generated (base64, #{model})"
+        return data_uri
+      end
+
+      Rails.logger.warn "No image data in response (#{model}): #{response}"
+    rescue Faraday::ServerError, Faraday::TimeoutError => e
+      last_error = e
+      Rails.logger.warn "Transient error on #{model} attempt #{attempt + 1}: #{e.message}"
+      next
+    rescue StandardError => e
+      last_error = e
+      # OpenAIの画像APIエラー内容をできるだけ詳しくログに出す
+      extra =
+        if e.respond_to?(:response) && e.response.is_a?(Hash)
+          body = e.response[:body]
+          " | response_body=#{body}"
+        else
+          ''
+        end
+      Rails.logger.error "Image generation error on #{model}: #{e.message}#{extra}"
+      break
     end
 
     Rails.logger.error "Image generation failed after retries: #{last_error&.message}"
@@ -222,14 +228,14 @@ class AiPhotoService
 
   def build_image_prompt(mbti_type, answers, story_mode = 'adventure', custom_story = nil, story_context = nil)
     answer_summary = answers.map { |a| "#{a[:dimension]}: #{a[:choice]}" }.join(', ')
-    
+
     # 物語の設定を構築
     story_context_text = build_story_context_for_images(story_mode, custom_story, story_context)
 
     <<~PROMPT
       MBTIタイプ: #{mbti_type}
       回答内容: #{answer_summary}
-      
+
       物語設定:
       #{story_context_text}
 
@@ -326,8 +332,7 @@ class AiPhotoService
   # 画像生成用の物語文脈を構築
   def build_story_context_for_images(story_mode, custom_story, story_context)
     base_context = build_base_story_context(story_mode, custom_story)
-    enhanced_context = enhance_image_context_with_emotions(base_context, story_context)
-    enhanced_context
+    enhance_image_context_with_emotions(base_context, story_context)
   end
 
   # 基本的な物語設定を構築
@@ -386,23 +391,19 @@ class AiPhotoService
 
     # 困難な決断の場面を検出
     if story_context['difficult_decisions'] || story_context['challenges']
-      emotional_elements << "困難な決断: 主人公が重要な選択を迫られる場面では、アートにシャープな線とコントラストの強い色彩を追加し、緊張感を視覚的に表現"
+      emotional_elements << '困難な決断: 主人公が重要な選択を迫られる場面では、アートにシャープな線とコントラストの強い色彩を追加し、緊張感を視覚的に表現'
     end
 
     # 悲しい結末を検出
     if story_context['sad_ending'] || story_context['tragic_elements']
-      emotional_elements << "悲しい結末: 物語が悲しい結末を迎えた場合、アートの色彩をより深みのあるトーンに調整し、メランコリックな雰囲気を表現"
+      emotional_elements << '悲しい結末: 物語が悲しい結末を迎えた場合、アートの色彩をより深みのあるトーンに調整し、メランコリックな雰囲気を表現'
     end
 
     # 勝利や成功の場面を検出
-    if story_context['victory'] || story_context['success']
-      emotional_elements << "勝利の瞬間: 主人公が困難を乗り越えた場面では、アートに光と希望の要素を追加し、明るくエネルギッシュな色彩を使用"
-    end
+    emotional_elements << '勝利の瞬間: 主人公が困難を乗り越えた場面では、アートに光と希望の要素を追加し、明るくエネルギッシュな色彩を使用' if story_context['victory'] || story_context['success']
 
     # 神秘的な要素を検出
-    if story_context['mystery'] || story_context['magical_elements']
-      emotional_elements << "神秘的な要素: 物語に神秘的な要素がある場合、アートに幻想的な色彩と抽象的な形状を追加し、超現実的な雰囲気を表現"
-    end
+    emotional_elements << '神秘的な要素: 物語に神秘的な要素がある場合、アートに幻想的な色彩と抽象的な形状を追加し、超現実的な雰囲気を表現' if story_context['mystery'] || story_context['magical_elements']
 
     emotional_elements.join("\n")
   end
