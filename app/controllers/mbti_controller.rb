@@ -149,7 +149,7 @@ class MbtiController < ApplicationController
       redirect_to mbti_show_path(session_id: @mbti_session.session_id)
     end
   end
-
+  
   def back
     # 一つ前に戻す
     prev_index = [@mbti_session.current_question_index - 1, 0].max

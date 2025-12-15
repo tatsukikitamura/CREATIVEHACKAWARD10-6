@@ -73,7 +73,7 @@ Rails.application.configure do
     config.cache_store = :redis_cache_store, {
       url: ENV['REDIS_URL'],
       namespace: 'mbti_cache',
-      expires_in: 24.hours
+      expires_in: 4.hours
     }
   else
     # Fallback to memory store if Redis is not available

@@ -12,22 +12,18 @@ class MbtiSession
   attribute :current_question_index, :integer, default: 0
   attribute :completed, :boolean, default: false
   attribute :story_mode, :string
-  # story_stateとcustom_storyはカスタムのgetter/setterで管理
+  attribute :story_state
+  attribute :custom_story
   attribute :created_at, :datetime
   attribute :updated_at, :datetime
 
   # デフォルト値を設定するメソッド
   def initialize(attributes = {})
-    # story_stateとcustom_storyを先に抽出
-    story_state_val = attributes.delete(:story_state) || attributes.delete('story_state') || {}
-    custom_story_val = attributes.delete(:custom_story) || attributes.delete('custom_story') || {}
-
     super
-
     self.questions ||= []
     self.answers ||= []
-    self.story_state = story_state_val
-    self.custom_story = custom_story_val
+    self.story_state ||= {}
+    self.custom_story ||= {}
   end
 
   validates :session_id, presence: true
@@ -75,12 +71,13 @@ class MbtiSession
     data = {}
     attribute_names.each do |name|
       value = public_send(name)
-      data[name.to_sym] = value
+      # story_stateとcustom_storyは文字列キーのハッシュとして保存（JSONB互換性のため）
+      data[name.to_sym] = if %i[story_state custom_story].include?(name)
+                            value.is_a?(Hash) ? stringify_hash_keys(value) : value
+                          else
+                            value
+                          end
     end
-
-    # story_stateとcustom_storyは別途追加（文字列キーのハッシュとして保存）
-    data[:story_state] = stringify_hash_keys(@story_state_value || {})
-    data[:custom_story] = stringify_hash_keys(@custom_story_value || {})
     data[:created_at] = created_at
     data[:updated_at] = updated_at
 
@@ -108,7 +105,7 @@ class MbtiSession
 
   # story_stateとcustom_storyを文字列キーでアクセスできるようにする
   def story_state
-    value = @story_state_value
+    value = read_attribute(:story_state)
     return {} unless value
 
     # シンボルキーを文字列キーに変換（コントローラーで文字列キーでアクセスしているため）
@@ -117,15 +114,16 @@ class MbtiSession
 
   def story_state=(value)
     # 文字列キーをシンボルキーに変換してから保存（内部ではシンボルキーで保存）
-    @story_state_value = if value.is_a?(Hash)
-                           string_to_symbolize_keys(value)
-                         else
-                           value || {}
-                         end
+    normalized_value = if value.is_a?(Hash)
+                         string_to_symbolize_keys(value)
+                       else
+                         value
+                       end
+    write_attribute(:story_state, normalized_value)
   end
 
   def custom_story
-    value = @custom_story_value
+    value = read_attribute(:custom_story)
     return {} unless value
 
     value.is_a?(Hash) ? symbolize_to_string_keys(value) : value
@@ -133,11 +131,12 @@ class MbtiSession
 
   def custom_story=(value)
     # 文字列キーをシンボルキーに変換してから保存（内部ではシンボルキーで保存）
-    @custom_story_value = if value.is_a?(Hash)
-                            string_to_symbolize_keys(value)
-                          else
-                            value || {}
-                          end
+    normalized_value = if value.is_a?(Hash)
+                         string_to_symbolize_keys(value)
+                       else
+                         value
+                       end
+    write_attribute(:custom_story, normalized_value)
   end
 
   # シンボルキーを文字列キーに変換（再帰的）
@@ -168,9 +167,9 @@ class MbtiSession
     end
   end
 
-  # 属性名のリストを取得（story_stateとcustom_storyは別管理）
+  # 属性名のリストを取得
   def attribute_names
-    %i[session_id questions answers current_question_index completed story_mode created_at updated_at]
+    %i[session_id questions answers current_question_index completed story_mode story_state custom_story created_at updated_at]
   end
 
   # 保存（エラー時は例外を発生させない）

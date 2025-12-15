@@ -135,7 +135,7 @@ AIが動的に生成する質問に答えるだけで、MBTI性格タイプを�
 
 ### AI/外部サービス
 - **OpenAI GPT-4o-mini**: 質問生成・分析・音楽提案
-- **DALL·E 3**: 画像生成
+- **DALL·E 2**: 画像生成
 
 ### 主要Gem
 - `ruby-openai`: OpenAI API連携
