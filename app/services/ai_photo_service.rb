@@ -11,7 +11,7 @@ class AiPhotoService
     prompt = build_image_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -22,7 +22,7 @@ class AiPhotoService
             content: prompt
           }
         ],
-        max_tokens: 800,
+        max_tokens: 500,
         temperature: 0.9
       }
     )

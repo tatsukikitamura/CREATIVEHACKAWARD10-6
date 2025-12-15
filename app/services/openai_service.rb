@@ -2,20 +2,38 @@
 
 # OpenAI APIを使用してMBTI診断関連の機能を提供するサービス
 class OpenaiService
+  # 応答時間最適化のための設定
+  FAST_MODEL = 'gpt-4o-mini'
+  FAST_TEMPERATURE = 0.6  # やや低めで一貫性を保ちつつ速度向上
+  FAST_MAX_TOKENS = 350   # 改善版プロンプト用に少し増加
+  FAST_TIMEOUT = 30       # タイムアウト短縮
+
   def initialize
     @client = OpenAI::Client.new(
       access_token: ENV.fetch('OPENAI_API_KEY', nil),
-      request_timeout: 60
+      request_timeout: FAST_TIMEOUT
     )
   end
 
   attr_reader :client
 
-  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress,
-                                              custom_story = nil)
-    Rails.logger.info 'Starting OpenAI API call for continuing story MBTI question generation'
-    Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}, " \
-                      "Mode: #{story_mode}, Progress: #{story_progress}"
+  # ============================================
+  # Phase 1,2,3対応：改善版メソッド
+  # ============================================
+
+  # StoryContextBuilderを使用した改善版質問生成
+  def generate_story_question_v2(
+    dimension:,
+    story_mode:,
+    story_arc:,
+    cumulative_context:,
+    phase_instruction:,
+    phase:,
+    last_answer:,
+    custom_story: nil
+  )
+    Rails.logger.info "Generating story question v2: dim=#{dimension}, phase=#{phase}, " \
+                      "has_context=#{cumulative_context.present?}, has_last_answer=#{last_answer.present?}"
 
     # APIキーの確認
     if ENV['OPENAI_API_KEY'].blank?
@@ -23,62 +41,104 @@ class OpenaiService
       return generate_fallback_single_question(dimension)
     end
 
-    # 次元に応じたプロンプトを作成
-    info = OpenaiPrompts.dimension_info[dimension]
-    story = OpenaiPrompts.story_settings(custom_story)[story_mode] || OpenaiPrompts.story_settings(custom_story)['adventure']
-
-    # 前回の回答の情報を構築
-    previous_context = OpenaiPrompts.build_previous_context(last_answer)
-
-    # カスタム物語の情報を追加
-    custom_info = OpenaiPrompts.build_custom_info(story_mode, custom_story)
-
-    prompt = OpenaiPrompts.continuing_story_prompt(
-      dimension: dimension,
-      question_number: question_number,
-      story_mode: story_mode,
-      story_progress: story_progress,
-      last_answer: last_answer,
-      custom_story: custom_story
-    )
-
-    Rails.logger.info "Generated prompt: #{prompt[0..300]}..."
+    # 初回か継続かでプロンプトとシステムメッセージを分ける
+    if last_answer.blank?
+      prompt = OpenaiPrompts.first_story_prompt_v2(
+        dimension: dimension,
+        story_mode: story_mode,
+        story_arc: story_arc,
+        custom_story: custom_story
+      )
+      system_content = build_first_question_system_prompt(phase)
+    else
+      prompt = OpenaiPrompts.continuing_story_prompt_v2(
+        dimension: dimension,
+        story_mode: story_mode,
+        story_arc: story_arc,
+        cumulative_context: cumulative_context,
+        phase_instruction: phase_instruction,
+        last_answer: last_answer,
+        custom_story: custom_story
+      )
+      system_content = build_continuing_system_prompt(phase)
+    end
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
-          {
-            role: 'system',
-            content: 'あなたは心理学者で、性格分析の専門家です。また、物語作家でもあります。' \
-                     '指定された物語モードの世界観に沿って、前回の回答を踏まえた連続性のある物語で、' \
-                     '性格や行動パターンを測る質問を作成してください。' \
-                     '必ず有効なJSON形式で回答し、他のテキストは含めないでください。'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'system', content: system_content },
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 700
+        temperature: FAST_TEMPERATURE,
+        max_tokens: FAST_MAX_TOKENS
       }
     )
 
-    Rails.logger.info 'OpenAI API response received successfully'
-    Rails.logger.info "Full API response: #{response.inspect}"
-    parsed_question = OpenaiParsers.parse_single_question_response(response)
-    Rails.logger.info "Parsed question: #{parsed_question.inspect}"
-    parsed_question
+    OpenaiParsers.parse_single_question_response(response)
   rescue StandardError => e
     Rails.logger.error "OpenAI API Error: #{e.message}"
-    Rails.logger.error "Error details: #{e.backtrace.first(5).join("\n")}"
+    generate_fallback_single_question(dimension)
+  end
+
+  # ============================================
+  # 旧バージョン（互換性のため維持）
+  # ============================================
+
+  def generate_continuing_story_mbti_question(dimension, question_number, story_mode, last_answer, story_progress,
+                                              custom_story = nil)
+    Rails.logger.info "Generating story question: dim=#{dimension}, q=#{question_number}, mode=#{story_mode}, " \
+                      "has_last_answer=#{last_answer.present?}"
+
+    # APIキーの確認
+    if ENV['OPENAI_API_KEY'].blank?
+      Rails.logger.warn 'OpenAI API key not set, using fallback question'
+      return generate_fallback_single_question(dimension)
+    end
+
+    # 初回か継続かでプロンプトを分ける
+    if last_answer.blank?
+      # 初回：物語の導入
+      prompt = OpenaiPrompts.first_story_prompt(
+        dimension: dimension,
+        story_mode: story_mode,
+        custom_story: custom_story
+      )
+      system_content = '物語作家。物語の冒頭シーンを作成し、最初の選択を提示。JSON形式のみで回答。'
+    else
+      # 継続：前回の選択結果から展開
+      prompt = OpenaiPrompts.continuing_story_prompt(
+        dimension: dimension,
+        question_number: question_number,
+        story_mode: story_mode,
+        story_progress: story_progress,
+        last_answer: last_answer,
+        custom_story: custom_story
+      )
+      system_content = '物語作家。前回の選択の「結果」として新たな状況を描写。' \
+                       '場面説明の繰り返しは禁止。「その結果〜」のように自然につなげる。JSON形式のみ。'
+    end
+
+    response = @client.chat(
+      parameters: {
+        model: FAST_MODEL,
+        messages: [
+          { role: 'system', content: system_content },
+          { role: 'user', content: prompt }
+        ],
+        temperature: FAST_TEMPERATURE,
+        max_tokens: FAST_MAX_TOKENS
+      }
+    )
+
+    OpenaiParsers.parse_single_question_response(response)
+  rescue StandardError => e
+    Rails.logger.error "OpenAI API Error: #{e.message}"
     generate_fallback_single_question(dimension)
   end
 
   def generate_story_mbti_question(dimension, question_number, story_mode)
-    Rails.logger.info 'Starting OpenAI API call for story MBTI question generation'
-    Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}, Mode: #{story_mode}"
+    Rails.logger.info "Generating story question: dim=#{dimension}, q=#{question_number}, mode=#{story_mode}"
 
     # APIキーの確認
     if ENV['OPENAI_API_KEY'].blank?
@@ -86,45 +146,31 @@ class OpenaiService
       return generate_fallback_single_question(dimension)
     end
 
-    # 次元に応じたプロンプトを作成
     prompt = OpenaiPrompts.story_prompt(dimension: dimension, question_number: question_number, story_mode: story_mode)
-
-    Rails.logger.info "Generated prompt: #{prompt[0..200]}..."
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
           {
             role: 'system',
-            content: 'あなたは心理学者で、性格分析の専門家です。また、物語作家でもあります。' \
-                     '指定された物語モードの世界観に沿って、性格や行動パターンを測る質問を作成してください。' \
-                     '必ず有効なJSON形式で回答し、他のテキストは含めないでください。'
+            content: 'あなたは心理学者兼物語作家。指定世界観で性格測定質問を作成。JSON形式のみで回答。'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 600
+        temperature: FAST_TEMPERATURE,
+        max_tokens: FAST_MAX_TOKENS
       }
     )
 
-    Rails.logger.info 'OpenAI API response received successfully'
-    Rails.logger.info "Full API response: #{response.inspect}"
-    parsed_question = OpenaiParsers.parse_single_question_response(response)
-    Rails.logger.info "Parsed question: #{parsed_question.inspect}"
-    parsed_question
+    OpenaiParsers.parse_single_question_response(response)
   rescue StandardError => e
     Rails.logger.error "OpenAI API Error: #{e.message}"
-    Rails.logger.error "Error details: #{e.backtrace.first(5).join("\n")}"
     generate_fallback_single_question(dimension)
   end
 
   def generate_single_mbti_question(dimension, question_number)
-    Rails.logger.info 'Starting OpenAI API call for single MBTI question generation'
-    Rails.logger.info "Dimension: #{dimension}, Question number: #{question_number}"
+    Rails.logger.info "Generating single question: dim=#{dimension}, q=#{question_number}"
 
     # APIキーの確認
     if ENV['OPENAI_API_KEY'].blank?
@@ -132,37 +178,26 @@ class OpenaiService
       return generate_fallback_single_question(dimension)
     end
 
-    # 次元に応じたプロンプトを作成
     prompt = OpenaiPrompts.single_prompt(dimension: dimension, question_number: question_number)
-
-    Rails.logger.info "Generated prompt: #{prompt[0..200]}..."
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
           {
             role: 'system',
-            content: 'あなたは心理学者で、性格分析の専門家です。正確で信頼性の高い性格診断テストの質問を作成してください。必ず有効なJSON形式で回答し、他のテキストは含めないでください。'
+            content: '性格診断の専門家。JSON形式のみで回答。'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
-        temperature: 0.8,
-        max_tokens: 500
+        temperature: FAST_TEMPERATURE,
+        max_tokens: FAST_MAX_TOKENS
       }
     )
 
-    Rails.logger.info 'OpenAI API response received successfully'
-    Rails.logger.info "Full API response: #{response.inspect}"
-    parsed_question = OpenaiParsers.parse_single_question_response(response)
-    Rails.logger.info "Parsed question: #{parsed_question.inspect}"
-    parsed_question
+    OpenaiParsers.parse_single_question_response(response)
   rescue StandardError => e
     Rails.logger.error "OpenAI API Error: #{e.message}"
-    Rails.logger.error "Error details: #{e.backtrace.first(5).join("\n")}"
     generate_fallback_single_question(dimension)
   end
 
@@ -176,70 +211,53 @@ class OpenaiService
     end
 
     prompt = build_analysis_prompt(answers)
-    Rails.logger.info "Analysis prompt: #{prompt[0..100]}..."
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
           {
             role: 'system',
-            content: 'あなたはMBTIの専門家です。ユーザーの回答を分析して、最も適切なMBTIタイプを判定してください。'
+            content: 'MBTIの専門家。回答を分析してMBTIタイプを判定。'
           },
-          {
-            role: 'user',
-            content: prompt
-          }
+          { role: 'user', content: prompt }
         ],
         temperature: 0.3,
-        max_tokens: 500
+        max_tokens: 200
       }
     )
 
-    Rails.logger.info 'OpenAI API analysis response received successfully'
     parse_analysis_response(response)
   rescue StandardError => e
     Rails.logger.error "OpenAI API Error: #{e.message}"
-    Rails.logger.error "Error details: #{e.backtrace.first(5).join("\n")}"
     nil
   end
-
-  private
-
-  # 以降のパーサは OpenaiParsers に委譲
-
-  public
 
   def generate_detailed_analysis(answers, mbti_type)
     return nil if ENV['OPENAI_API_KEY'].blank?
 
+    answers_text = answers.each_with_index.map do |a, i|
+      "#{i + 1}. #{a[:question]} → #{a[:choice] == 'A' ? a[:optionA] : a[:optionB]} (#{a[:dimension]})"
+    end.join("\n")
+
     prompt = <<~PROMPT
-      あなたはMBTIの専門家です。以下の出力仕様に厳密に従ってください。
+      対象: #{mbti_type}
+      回答:
+      #{answers_text}
 
-      対象タイプ: #{mbti_type}
-
-      ユーザーの回答:
-      #{answers.each_with_index.map do |a, i|
-        "#{i + 1}. 質問: #{a[:question]}\n   回答: #{a[:choice] == 'A' ? a[:optionA] : a[:optionB]} " \
-          "(次元: #{a[:dimension]})"
-      end.join("\n")}
-
-      出力仕様（必ずこのJSONのみを出力、他の文字や注釈は一切含めない）:
-      {
-        "type_details": "対象タイプの特徴、強み、弱み、キャリア傾向、人間関係の傾向を日本語で200〜300文字",
-        "answer_summary": "上記の回答傾向を踏まえた要約を日本語で150〜250文字（具体的観察を含める）"
-      }
+      出力（JSONのみ）:
+      {"type_details":"タイプの特徴・強み・弱み・傾向(200-300字)","answer_summary":"回答傾向の要約(150-250字)"}
     PROMPT
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
-          { role: 'system', content: 'あなたはMBTIと性格分析の専門家です。常に指定のJSONのみで返答してください。' },
+          { role: 'system', content: 'MBTI専門家。指定JSONのみで返答。' },
           { role: 'user', content: prompt }
         ],
         temperature: 0.5,
-        max_tokens: 700
+        max_tokens: 400
       }
     )
 
@@ -261,62 +279,33 @@ class OpenaiService
 
     # 物語モードに応じた設定
     story_settings = {
-      'horror' => {
-        atmosphere: 'ホラー・スリラー',
-        narrative_style: '緊張感と恐怖感のある物語調',
-        context: '暗い夜道、古い屋敷、謎めいた出来事の世界'
-      },
-      'adventure' => {
-        atmosphere: 'アドベンチャー・冒険',
-        narrative_style: 'エキサイティングで冒険的な物語調',
-        context: '未知の土地、宝物探し、危険な挑戦の世界'
-      },
-      'mystery' => {
-        atmosphere: 'ミステリー・推理',
-        narrative_style: '推理と分析が必要な物語調',
-        context: '謎めいた事件、隠された真実、複雑な人間関係の世界'
-      }
+      'horror' => { atmosphere: 'ホラー・スリラー', context: '暗い夜道、古い屋敷、謎めいた出来事' },
+      'adventure' => { atmosphere: 'アドベンチャー・冒険', context: '未知の土地、宝物探し、危険な挑戦' },
+      'mystery' => { atmosphere: 'ミステリー・推理', context: '謎めいた事件、隠された真実、複雑な人間関係' }
     }
 
     story = story_settings[story_mode] || story_settings['adventure']
-
-    # 回答履歴から物語の流れを構築
     story_context = build_story_context_from_answers(answers, story_mode)
 
     prompt = <<~PROMPT
-      あなたは心理学者であり、物語作家でもあります。ユーザーの回答履歴を物語の文脈で分析し、なぜこのMBTIタイプと診断されたのかを具体的に解説してください。
+      結果: #{mbti_type} / モード: #{story[:atmosphere]}
 
-      診断結果: #{mbti_type}
-      物語モード: #{story[:atmosphere]}
-      物語の文脈: #{story[:context]}
-
-      ユーザーの回答履歴（物語の選択）:
+      回答履歴:
       #{story_context}
 
-      出力仕様（必ずこのJSONのみを出力、他の文字や注釈は一切含めない）:
-      {
-        "story_analysis": "物語の文脈に沿って、なぜこのタイプと診断されたのかを具体的に解説" \
-                          "（例：'あなたはアドベンチャーの物語で常に仲間を優先する選択をしました。" \
-                          "これはあなたの「感情(F)」の特性を強く示しています...'）日本語で300〜400文字",
-        "personality_insights": "回答パターンから見える性格の特徴や傾向を物語の選択として解説 日本語で200〜300文字",
-        "growth_suggestions": "このタイプの特性を活かした成長のヒントを物語の冒険者としてのアドバイス形式で 日本語で150〜250文字"
-      }
+      出力（JSONのみ）:
+      {"story_analysis":"物語文脈での診断理由(300-400字)","personality_insights":"回答パターンからの性格特徴(200-300字)","growth_suggestions":"成長のヒント(150-250字)"}
     PROMPT
 
     response = @client.chat(
       parameters: {
-        model: 'gpt-4o-mini',
+        model: FAST_MODEL,
         messages: [
-          {
-            role: 'system',
-            content: 'あなたは心理学者で物語作家です。MBTIの専門知識と物語創作の才能を組み合わせて、' \
-                     'ユーザーの回答を物語の文脈で分析し、説得力のある個人的なレポートを作成してください。' \
-                     '常に指定のJSONのみで返答してください。'
-          },
+          { role: 'system', content: '心理学者兼物語作家。指定JSONのみで返答。' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 1000
+        temperature: 0.6,
+        max_tokens: 600
       }
     )
 
@@ -338,6 +327,42 @@ class OpenaiService
   end
 
   private
+
+  # フェーズに応じた初回用システムプロンプト
+  def build_first_question_system_prompt(phase)
+    base = '物語作家。物語の冒頭シーンを作成し、最初の選択を提示。'
+
+    phase_hint = case phase
+                 when :opening
+                   '世界観を丁寧に伝え、読者を物語に引き込む。'
+                 else
+                   ''
+                 end
+
+    "#{base}#{phase_hint}JSON形式のみで回答。"
+  end
+
+  # フェーズに応じた継続用システムプロンプト
+  def build_continuing_system_prompt(phase)
+    base = '物語作家。前回の選択の「結果」として新たな状況を描写。'
+
+    phase_hint = case phase
+                 when :opening
+                   '穏やかなペースで世界観を広げる。'
+                 when :rising
+                   '緊張感を高め、問題が深刻化していく展開。'
+                 when :climax
+                   '最大の危機。劇的で緊迫した展開。これまでの選択が影響。'
+                 when :falling
+                   '解決への道筋が見え始める。希望と困難の交錯。'
+                 when :resolution
+                   '物語の締めくくり。選択の結果として結末へ向かう。'
+                 else
+                   ''
+                 end
+
+    "#{base}#{phase_hint}場面説明の繰り返しは禁止。「その結果〜」のように自然につなげる。JSON形式のみ。"
+  end
 
   def build_story_context_from_answers(answers, story_mode)
     OpenaiPrompts.build_story_context_from_answers(answers, story_mode)
@@ -361,16 +386,13 @@ class OpenaiService
   end
 
   def build_analysis_prompt(answers)
-    prompt = "以下の質問に対する回答を分析して、MBTIタイプを判定してください：\n\n"
+    prompt = "以下の回答からMBTIタイプを判定:\n\n"
 
     answers.each_with_index do |answer, index|
-      prompt += "#{index + 1}. #{answer[:question]}\n"
-      prompt += "回答: #{answer[:choice] == 'A' ? answer[:optionA] : answer[:optionB]}\n\n"
+      prompt += "#{index + 1}. #{answer[:question]} → #{answer[:choice] == 'A' ? answer[:optionA] : answer[:optionB]}\n"
     end
 
-    prompt += '上記の回答に基づいて、最も適切なMBTIタイプ（INTJ, INTP, ENTJ, ENTP, INFJ, INFP, ' \
-              'ENFJ, ENFP, ISTJ, ISFJ, ESTJ, ESFJ, ISTP, ISFP, ESTP, ESFPのいずれか）を判定してください。'
-
+    prompt += "\nMBTIタイプ（INTJ, INTP等）を1つ回答。"
     prompt
   end
 

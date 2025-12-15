@@ -1,12 +1,37 @@
 # frozen_string_literal: true
 
-# MBTI診断セッションを管理するモデル
-class MbtiSession < ApplicationRecord
-  validates :session_id, presence: true, uniqueness: true
-  validates :current_question_index, presence: true, numericality: { greater_than_or_equal_to: 0 }
+# MBTI診断セッションを管理するモデル（キャッシュベース）
+class MbtiSession
+  include ActiveModel::Model
+  include ActiveModel::Attributes
+  include ActiveModel::Validations
 
-  serialize :questions, coder: JSON
-  serialize :answers, coder: JSON
+  attribute :session_id, :string
+  attribute :questions
+  attribute :answers
+  attribute :current_question_index, :integer, default: 0
+  attribute :completed, :boolean, default: false
+  attribute :story_mode, :string
+  # story_stateとcustom_storyはカスタムのgetter/setterで管理
+  attribute :created_at, :datetime
+  attribute :updated_at, :datetime
+
+  # デフォルト値を設定するメソッド
+  def initialize(attributes = {})
+    # story_stateとcustom_storyを先に抽出
+    story_state_val = attributes.delete(:story_state) || attributes.delete('story_state') || {}
+    custom_story_val = attributes.delete(:custom_story) || attributes.delete('custom_story') || {}
+
+    super
+
+    self.questions ||= []
+    self.answers ||= []
+    self.story_state = story_state_val
+    self.custom_story = custom_story_val
+  end
+
+  validates :session_id, presence: true
+  validates :current_question_index, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
   # 各次元の質問数を追跡
   DIMENSIONS = %w[EI SN TF JP].freeze
@@ -18,8 +43,172 @@ class MbtiSession < ApplicationRecord
     'mystery' => 'ミステリー'
   }.freeze
 
+  # キャッシュキーを生成
+  def cache_key
+    "mbti_session:#{session_id}"
+  end
+
+  # キャッシュから取得
+  def self.find_by(session_id:)
+    cached_data = Rails.cache.read("mbti_session:#{session_id}")
+    return nil unless cached_data
+
+    # シンボルキーと文字列キーの両方に対応
+    data = if cached_data.is_a?(Hash)
+             # シンボルキーを文字列キーに変換してからシンボルキーに戻す（ActiveModel::Attributes用）
+             cached_data.symbolize_keys
+           else
+             cached_data
+           end
+    new(data)
+  end
+
+  # キャッシュに保存
+  def save!
+    raise ActiveModel::ValidationError, self unless valid?
+
+    now = Time.current
+    self.created_at ||= now
+    self.updated_at = now
+
+    # 属性をハッシュに変換（シンボルキーで保存）
+    data = {}
+    attribute_names.each do |name|
+      value = public_send(name)
+      data[name.to_sym] = value
+    end
+
+    # story_stateとcustom_storyは別途追加（文字列キーのハッシュとして保存）
+    data[:story_state] = stringify_hash_keys(@story_state_value || {})
+    data[:custom_story] = stringify_hash_keys(@custom_story_value || {})
+    data[:created_at] = created_at
+    data[:updated_at] = updated_at
+
+    Rails.cache.write(
+      cache_key,
+      data,
+      expires_in: 24.hours # 24時間で期限切れ
+    )
+    true
+  end
+
+  # ハッシュのキーを文字列に変換（再帰的）
+  def stringify_hash_keys(value)
+    case value
+    when Hash
+      value.each_with_object({}) do |(k, v), h|
+        h[k.to_s] = stringify_hash_keys(v)
+      end
+    when Array
+      value.map { |item| stringify_hash_keys(item) }
+    else
+      value
+    end
+  end
+
+  # story_stateとcustom_storyを文字列キーでアクセスできるようにする
+  def story_state
+    value = @story_state_value
+    return {} unless value
+
+    # シンボルキーを文字列キーに変換（コントローラーで文字列キーでアクセスしているため）
+    value.is_a?(Hash) ? symbolize_to_string_keys(value) : value
+  end
+
+  def story_state=(value)
+    # 文字列キーをシンボルキーに変換してから保存（内部ではシンボルキーで保存）
+    @story_state_value = if value.is_a?(Hash)
+                           string_to_symbolize_keys(value)
+                         else
+                           value || {}
+                         end
+  end
+
+  def custom_story
+    value = @custom_story_value
+    return {} unless value
+
+    value.is_a?(Hash) ? symbolize_to_string_keys(value) : value
+  end
+
+  def custom_story=(value)
+    # 文字列キーをシンボルキーに変換してから保存（内部ではシンボルキーで保存）
+    @custom_story_value = if value.is_a?(Hash)
+                            string_to_symbolize_keys(value)
+                          else
+                            value || {}
+                          end
+  end
+
+  # シンボルキーを文字列キーに変換（再帰的）
+  def symbolize_to_string_keys(value)
+    case value
+    when Hash
+      value.each_with_object({}) do |(k, v), h|
+        h[k.to_s] = symbolize_to_string_keys(v)
+      end
+    when Array
+      value.map { |item| symbolize_to_string_keys(item) }
+    else
+      value
+    end
+  end
+
+  # 文字列キーをシンボルキーに変換（再帰的）
+  def string_to_symbolize_keys(value)
+    case value
+    when Hash
+      value.each_with_object({}) do |(k, v), h|
+        h[k.to_sym] = string_to_symbolize_keys(v)
+      end
+    when Array
+      value.map { |item| string_to_symbolize_keys(item) }
+    else
+      value
+    end
+  end
+
+  # 属性名のリストを取得（story_stateとcustom_storyは別管理）
+  def attribute_names
+    %i[session_id questions answers current_question_index completed story_mode created_at updated_at]
+  end
+
+  # 保存（エラー時は例外を発生させない）
+  def save
+    save!
+  rescue ActiveModel::ValidationError
+    false
+  end
+
+  # 更新
+  def update!(attributes_hash)
+    attributes_hash.each do |key, value|
+      public_send("#{key}=", value)
+    end
+    save!
+  end
+
+  # 更新（エラー時は例外を発生させない）
+  def update(attributes_hash)
+    update!(attributes_hash)
+  rescue ActiveModel::ValidationError
+    false
+  end
+
+  # セッションを作成または取得
   def self.find_or_create_by_session_id(session_id)
-    find_by(session_id: session_id) || create!(session_id: session_id)
+    find_by(session_id: session_id) || begin
+      new_session = new(session_id: session_id, current_question_index: 0, completed: false)
+      new_session.save!
+      new_session
+    end
+  end
+
+  # セッションを作成
+  def self.create!(attributes_hash = {})
+    new_session = new(attributes_hash)
+    new_session.save!
+    new_session
   end
 
   def questions_array
@@ -36,7 +225,10 @@ class MbtiSession < ApplicationRecord
 
   def add_answer(question_index, answer)
     self.answers ||= []
-    self.answers[question_index] = answer
+    # 配列を拡張してから値を設定
+    self.answers = answers.dup if answers.frozen?
+    answers << nil while answers.length <= question_index
+    answers[question_index] = answer
     self.current_question_index = question_index + 1
     save!
   end

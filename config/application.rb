@@ -2,7 +2,25 @@
 
 require_relative 'boot'
 
-require 'rails/all'
+# Active Recordを除外して必要なモジュールのみをロード（DBなしで動作）
+require 'rails'
+
+# Active RecordとActive Storageを除外（DBなしで動作するため）
+# require 'active_record/railtie'
+# require 'active_storage/engine'
+
+# ActiveModelを明示的に読み込み（MbtiSessionで使用）
+require 'active_model'
+
+require 'action_controller/railtie'
+require 'action_view/railtie'
+require 'action_mailer/railtie'
+require 'active_job/railtie'
+require 'action_cable/engine'
+# require 'action_mailbox/engine'
+# require 'action_text/engine'
+require 'rails/test_unit/railtie'
+require 'sprockets/railtie'
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.

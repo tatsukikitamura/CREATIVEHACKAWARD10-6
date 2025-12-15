@@ -146,7 +146,7 @@
             if (!res.ok) throw new Error('レポート生成に失敗しました');
             const data = await res.json();
             section.innerHTML = `
-              <h2 class=\"scores-title\">🎭 あなただけの詳細レポート（${data.mbti_type}）</h2>
+              <h2 class=\"scores-title\">あなただけの詳細レポート（${data.mbti_type}）</h2>
               <div class=\"story-mode-badge\">${getStoryModeLabel(data.story_mode)}</div>
               <div class=\"report-section\">
                 <h3 class=\"report-section-title\">📖 物語でのあなたの選択分析</h3>
@@ -162,7 +162,7 @@
               </div>
             `;
           } catch (e) {
-            section.innerHTML = '<h2 class="scores-title">🎭 あなただけの詳細レポート</h2><div style="color:#c00;">レポート生成に失敗しました。時間をおいて再度お試しください。</div>';
+            section.innerHTML = '<h2 class="scores-title">あなただけの詳細レポート</h2><div style="color:#c00;">レポート生成に失敗しました。時間をおいて再度お試しください。</div>';
           }
         });
       }

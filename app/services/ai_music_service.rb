@@ -11,7 +11,7 @@ class AiMusicService
     prompt = build_music_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -22,7 +22,7 @@ class AiMusicService
             content: prompt
           }
         ],
-        max_tokens: 1000,
+        max_tokens: 600,
         temperature: 0.7
       }
     )
@@ -42,7 +42,7 @@ class AiMusicService
     prompt = build_playlist_prompt(mbti_type, answers, story_mode, custom_story, story_context)
     response = @openai_service.client.chat(
       parameters: {
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -53,7 +53,7 @@ class AiMusicService
             content: prompt
           }
         ],
-        max_tokens: 800,
+        max_tokens: 500,
         temperature: 0.8
       }
     )
@@ -91,6 +91,7 @@ class AiMusicService
       #{answer_details}
 
       この人の性格特性と物語の文脈に基づいて、以下の形式で音楽の提案をしてください：
+      タイトルを**Nine Inch Nails**のように囲まないでください
 
       ## おすすめジャンル
       - ジャンル名: 理由（物語の雰囲気と性格特性を考慮）
@@ -131,6 +132,7 @@ class AiMusicService
       #{answer_details}
 
       この人の性格と物語の文脈に合うプレイリストを作成してください：
+      タイトルを**Nine Inch Nails**のように囲まないでください
 
       ## プレイリストタイトル
       [物語の世界観と性格を反映した魅力的なタイトル]
@@ -230,6 +232,11 @@ class AiMusicService
         setting: '謎めいた事件、隠された真実、複雑な人間関係',
         tone: '推理と分析が必要な状況'
       },
+      'game_master' => {
+        atmosphere: 'インタラクティブ・ストーリー',
+        setting: 'AIゲームマスターが紡ぐ物語世界',
+        tone: 'プレイヤーの選択で変化するダイナミックな展開'
+      },
       'creator' => {
         atmosphere: custom_story&.dig('mood') || 'ドラマチック',
         setting: custom_story&.dig('setting') || '未知の世界',
@@ -238,6 +245,8 @@ class AiMusicService
       }
     }
 
+    # story_modeがnilまたは空文字の場合もログ出力
+    Rails.logger.info "AiMusicService: story_mode=#{story_mode.inspect}"
     story = story_settings[story_mode] || story_settings['adventure']
 
     context = "舞台: #{story[:setting]}, 雰囲気: #{story[:atmosphere]}, トーン: #{story[:tone]}"
@@ -264,22 +273,20 @@ class AiMusicService
 
     # 困難な決断の場面を検出
     if story_context['difficult_decisions'] || story_context['challenges']
-      emotional_elements << "困難な決断: 主人公が重要な選択を迫られる場面では、緊張感を反映してBPMを少し速め、音楽にドラマチックな要素を追加"
+      emotional_elements << '困難な決断: 主人公が重要な選択を迫られる場面では、緊張感を反映してBPMを少し速め、音楽にドラマチックな要素を追加'
     end
 
     # 悲しい結末を検出
     if story_context['sad_ending'] || story_context['tragic_elements']
-      emotional_elements << "悲しい結末: 物語が悲しい結末を迎えた場合、音楽にメランコリックな要素を加え、アートの色彩をより深みのあるトーンに調整"
+      emotional_elements << '悲しい結末: 物語が悲しい結末を迎えた場合、音楽にメランコリックな要素を加え、アートの色彩をより深みのあるトーンに調整'
     end
 
     # 勝利や成功の場面を検出
-    if story_context['victory'] || story_context['success']
-      emotional_elements << "勝利の瞬間: 主人公が困難を乗り越えた場面では、音楽をより明るくエネルギッシュにし、アートに光と希望の要素を追加"
-    end
+    emotional_elements << '勝利の瞬間: 主人公が困難を乗り越えた場面では、音楽をより明るくエネルギッシュにし、アートに光と希望の要素を追加' if story_context['victory'] || story_context['success']
 
     # 神秘的な要素を検出
     if story_context['mystery'] || story_context['magical_elements']
-      emotional_elements << "神秘的な要素: 物語に神秘的な要素がある場合、音楽にアンビエントな要素を加え、アートに幻想的な色彩と抽象的な形状を追加"
+      emotional_elements << '神秘的な要素: 物語に神秘的な要素がある場合、音楽にアンビエントな要素を加え、アートに幻想的な色彩と抽象的な形状を追加'
     end
 
     emotional_elements.join("\n")

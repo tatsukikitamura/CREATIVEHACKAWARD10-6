@@ -51,9 +51,28 @@
       text-align: center;
     }
 
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .form-section:last-of-type {
+      border-bottom: none;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
     .form-group {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .form-label {
@@ -81,7 +100,7 @@
     }
 
     .form-textarea {
-      min-height: 120px;
+      min-height: 100px;
       resize: vertical;
     }
 
@@ -90,6 +109,12 @@
       color: #666;
       margin-top: 0.5rem;
       font-style: italic;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
 
     .button-group {
@@ -114,6 +139,12 @@
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
     }
 
     .btn-secondary {
@@ -159,17 +190,35 @@
       backdrop-filter: blur(10px);
     }
 
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
     .preview-item {
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
     }
 
     .preview-label {
       font-weight: 600;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.3rem;
+      font-size: 0.9rem;
+      opacity: 0.9;
     }
 
     .preview-value {
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .optional-badge {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 0.5rem;
+      font-weight: normal;
     }
 
     @media (max-width: 768px) {
@@ -184,6 +233,14 @@
 
       .subtitle {
         font-size: 1rem;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-grid {
+        grid-template-columns: 1fr;
       }
 
       .button-group {
@@ -208,74 +265,140 @@
     <%= form_with url: mbti_create_story_path, method: :post, local: true, id: "creator-form" do |form| %>
       <%= form.hidden_field :session_id, value: @session_id %>
       
-      <div class="form-group">
-        <%= form.label :setting, "冒険の舞台", class: "form-label" %>
-        <%= form.text_field :setting, 
-            placeholder: "例：近未来の東京、魔法の王国、宇宙ステーション", 
-            class: "form-input",
-            id: "setting-input" %>
-        <div class="example-text">物語が展開する場所や時代を設定してください</div>
+      <!-- 基本設定セクション -->
+      <div class="form-section">
+        <div class="section-title">🌍 世界観の設定</div>
+        
+        <div class="form-group">
+          <%= form.label :setting, "冒険の舞台", class: "form-label" %>
+          <%= form.text_field :setting, 
+              placeholder: "例：近未来の東京、魔法の王国、宇宙ステーション", 
+              class: "form-input",
+              id: "setting-input" %>
+          <div class="example-text">物語が展開する場所を設定してください</div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <%= form.label :time_period, "時代設定", class: "form-label" %>
+            <%= form.select :time_period, 
+                options_for_select([
+                  ['現代', 'modern'],
+                  ['近未来', 'near_future'],
+                  ['遠い未来', 'far_future'],
+                  ['ファンタジー', 'fantasy'],
+                  ['中世', 'medieval'],
+                  ['歴史的', 'historical']
+                ]), 
+                { prompt: "時代を選択" },
+                { class: "form-input", id: "time-period-select" } %>
+          </div>
+          
+          <div class="form-group">
+            <%= form.label :mood, "物語の雰囲気", class: "form-label" %>
+            <%= form.select :mood, 
+                options_for_select([
+                  ['ドラマチック', 'dramatic'],
+                  ['ミステリアス', 'mysterious'],
+                  ['アドベンチャー', 'adventure'],
+                  ['ロマンチック', 'romantic'],
+                  ['スリラー', 'thriller'],
+                  ['コメディ', 'comedy']
+                ]), 
+                { prompt: "雰囲気を選択" },
+                { class: "form-input", id: "mood-select" } %>
+          </div>
+        </div>
       </div>
       
-      <div class="form-group">
-        <%= form.label :theme, "テーマ・目標", class: "form-label" %>
-        <%= form.text_field :theme, 
-            placeholder: "例：失われた記憶を探す、古代の謎を解く、世界を救う", 
-            class: "form-input",
-            id: "theme-input" %>
-        <div class="example-text">主人公が達成すべき目標や探求するテーマを設定してください</div>
+      <!-- 物語設定セクション -->
+      <div class="form-section">
+        <div class="section-title">📖 物語の設定</div>
+        
+        <div class="form-group">
+          <%= form.label :theme, "テーマ・目標", class: "form-label" %>
+          <%= form.text_field :theme, 
+              placeholder: "例：失われた記憶を探す、古代の謎を解く、世界を救う", 
+              class: "form-input",
+              id: "theme-input" %>
+          <div class="example-text">物語の中心となるテーマや目標を設定してください</div>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :key_items, "重要なアイテム・シンボル", class: "form-label" %>
+          <span class="optional-badge">任意</span>
+          <%= form.text_field :key_items, 
+              placeholder: "例：古い鍵、謎の地図、光る石", 
+              class: "form-input",
+              id: "key-items-input" %>
+          <div class="example-text">物語に登場する重要なアイテムを設定（カンマ区切り）</div>
+        </div>
       </div>
       
-      <div class="form-group">
-        <%= form.label :mood, "物語の雰囲気", class: "form-label" %>
-        <%= form.select :mood, 
-            options_for_select([
-              ['ドラマチック', 'dramatic'],
-              ['ミステリアス', 'mysterious'],
-              ['アドベンチャー', 'adventure'],
-              ['ロマンチック', 'romantic'],
-              ['スリラー', 'thriller'],
-              ['コメディ', 'comedy']
-            ]), 
-            { prompt: "雰囲気を選択してください" },
-            { class: "form-input" } %>
-        <div class="example-text">物語全体の雰囲気やトーンを選択してください</div>
-      </div>
-      
-      <div class="form-group">
-        <%= form.label :character_background, "主人公の背景（任意）", class: "form-label" %>
-        <%= form.text_area :character_background, 
-            placeholder: "例：記憶を失った探偵、魔法学校の学生、宇宙飛行士", 
-            class: "form-input form-textarea",
-            id: "character-input" %>
-        <div class="example-text">主人公の職業や背景を設定すると、より個性的な物語になります</div>
+      <!-- 主人公設定セクション -->
+      <div class="form-section">
+        <div class="section-title">👤 主人公の設定</div>
+        
+        <div class="form-group">
+          <%= form.label :character_background, "主人公の背景", class: "form-label" %>
+          <span class="optional-badge">任意</span>
+          <%= form.text_area :character_background, 
+              placeholder: "例：記憶を失った探偵、魔法学校の学生、宇宙飛行士", 
+              class: "form-input form-textarea",
+              id: "character-input" %>
+          <div class="example-text">主人公の職業や背景を設定すると、より個性的な物語になります</div>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :protagonist_goal, "主人公の目的", class: "form-label" %>
+          <span class="optional-badge">任意</span>
+          <%= form.text_field :protagonist_goal, 
+              placeholder: "例：失われた家族を探す、世界を救う使命を果たす", 
+              class: "form-input",
+              id: "goal-input" %>
+          <div class="example-text">主人公が達成したい具体的な目標</div>
+        </div>
       </div>
       
       <div class="preview-section" id="preview-section" style="display: none;">
         <div class="preview-title">📖 物語プレビュー</div>
         <div class="preview-content">
-          <div class="preview-item">
-            <div class="preview-label">舞台：</div>
-            <div class="preview-value" id="preview-setting">-</div>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <div class="preview-label">舞台</div>
+              <div class="preview-value" id="preview-setting">-</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">時代</div>
+              <div class="preview-value" id="preview-time-period">-</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">雰囲気</div>
+              <div class="preview-value" id="preview-mood">-</div>
+            </div>
+            <div class="preview-item">
+              <div class="preview-label">テーマ</div>
+              <div class="preview-value" id="preview-theme">-</div>
+            </div>
           </div>
-          <div class="preview-item">
-            <div class="preview-label">テーマ：</div>
-            <div class="preview-value" id="preview-theme">-</div>
-          </div>
-          <div class="preview-item">
-            <div class="preview-label">雰囲気：</div>
-            <div class="preview-value" id="preview-mood">-</div>
-          </div>
-          <div class="preview-item" id="character-preview" style="display: none;">
-            <div class="preview-label">主人公：</div>
+          <div class="preview-item" id="character-preview" style="display: none; margin-top: 1rem;">
+            <div class="preview-label">主人公</div>
             <div class="preview-value" id="preview-character">-</div>
+          </div>
+          <div class="preview-item" id="goal-preview" style="display: none; margin-top: 0.5rem;">
+            <div class="preview-label">目的</div>
+            <div class="preview-value" id="preview-goal">-</div>
+          </div>
+          <div class="preview-item" id="items-preview" style="display: none; margin-top: 0.5rem;">
+            <div class="preview-label">キーアイテム</div>
+            <div class="preview-value" id="preview-items">-</div>
           </div>
         </div>
       </div>
       
       <div class="button-group">
         <%= link_to "← 戻る", mbti_select_mode_path(session_id: @session_id), class: "btn-secondary" %>
-        <%= form.submit "物語を作成して診断開始", class: "btn-primary", id: "create-button" %>
+        <%= form.submit "物語を作成して診断開始", class: "btn-primary", id: "create-button", disabled: true %>
       </div>
     <% end %>
   </div>
@@ -286,8 +409,11 @@
     document.addEventListener('DOMContentLoaded', function() {
       const settingInput = document.getElementById('setting-input');
       const themeInput = document.getElementById('theme-input');
-      const moodSelect = document.getElementById('mood');
+      const moodSelect = document.getElementById('mood-select');
+      const timePeriodSelect = document.getElementById('time-period-select');
       const characterInput = document.getElementById('character-input');
+      const goalInput = document.getElementById('goal-input');
+      const keyItemsInput = document.getElementById('key-items-input');
       const previewSection = document.getElementById('preview-section');
       const createButton = document.getElementById('create-button');
       
@@ -300,18 +426,31 @@
         'comedy': 'コメディ'
       };
       
+      const timePeriodLabels = {
+        'modern': '現代',
+        'near_future': '近未来',
+        'far_future': '遠い未来',
+        'fantasy': 'ファンタジー',
+        'medieval': '中世',
+        'historical': '歴史的'
+      };
+      
       function updatePreview() {
         const setting = settingInput.value.trim();
         const theme = themeInput.value.trim();
         const mood = moodSelect.value;
+        const timePeriod = timePeriodSelect.value;
         const character = characterInput.value.trim();
+        const goal = goalInput.value.trim();
+        const keyItems = keyItemsInput.value.trim();
         
-        if (setting || theme || mood) {
+        if (setting || theme || mood || timePeriod) {
           previewSection.style.display = 'block';
           
           document.getElementById('preview-setting').textContent = setting || '未設定';
           document.getElementById('preview-theme').textContent = theme || '未設定';
           document.getElementById('preview-mood').textContent = mood ? moodLabels[mood] : '未設定';
+          document.getElementById('preview-time-period').textContent = timePeriod ? timePeriodLabels[timePeriod] : '未設定';
           
           if (character) {
             document.getElementById('character-preview').style.display = 'block';
@@ -319,20 +458,37 @@
           } else {
             document.getElementById('character-preview').style.display = 'none';
           }
+          
+          if (goal) {
+            document.getElementById('goal-preview').style.display = 'block';
+            document.getElementById('preview-goal').textContent = goal;
+          } else {
+            document.getElementById('goal-preview').style.display = 'none';
+          }
+          
+          if (keyItems) {
+            document.getElementById('items-preview').style.display = 'block';
+            document.getElementById('preview-items').textContent = keyItems;
+          } else {
+            document.getElementById('items-preview').style.display = 'none';
+          }
         } else {
           previewSection.style.display = 'none';
         }
         
-        // 必須項目のチェック
-        const hasRequired = setting && theme && mood;
+        // 必須項目のチェック（舞台、テーマ、雰囲気、時代）
+        const hasRequired = setting && theme && mood && timePeriod;
         createButton.disabled = !hasRequired;
-        createButton.style.opacity = hasRequired ? '1' : '0.5';
       }
       
+      // イベントリスナーを設定
       settingInput.addEventListener('input', updatePreview);
       themeInput.addEventListener('input', updatePreview);
       moodSelect.addEventListener('change', updatePreview);
+      timePeriodSelect.addEventListener('change', updatePreview);
       characterInput.addEventListener('input', updatePreview);
+      goalInput.addEventListener('input', updatePreview);
+      keyItemsInput.addEventListener('input', updatePreview);
       
       // 初期状態でプレビューを更新
       updatePreview();

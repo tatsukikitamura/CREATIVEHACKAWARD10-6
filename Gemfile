@@ -16,11 +16,14 @@ end
 # SCSS compiler
 gem 'sassc-rails'
 
-# Use sqlite3 as the database for Active Record
+# Database gems are disabled (using cache-based storage)
+# group :development, :test do
+#   gem 'sqlite3', '~> 2.1'
+# end
+
 group :development, :test do
   gem 'brakeman'
   gem 'rubocop'
-  gem 'sqlite3', '~> 2.1'
 end
 
 # Use the Puma web server [https://github.com/puma/puma]
@@ -38,8 +41,8 @@ gem 'stimulus-rails'
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem 'jbuilder'
 
-# Use Redis adapter to run Action Cable in production
-# gem "redis", ">= 4.0.1"
+# Use Redis adapter to run Action Cable in production and for cache store
+gem 'redis', '>= 4.0.1'
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"
@@ -65,9 +68,10 @@ gem 'ruby-openai'
 # Environment variables
 gem 'dotenv-rails'
 
-group :production do
-  gem 'pg', '~> 1.5'
-end
+# Database gems are disabled (using cache-based storage)
+# group :production do
+#   gem 'pg', '~> 1.5'
+# end
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem 'debug', platforms: %i[mri mswin mswin64 mingw x64_mingw]

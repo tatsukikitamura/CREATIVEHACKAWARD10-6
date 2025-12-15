@@ -55,13 +55,16 @@ class MbtiController < ApplicationController
   def create_story
     @mbti_session = MbtiSession.find_or_create_by_session_id(params[:session_id])
 
-    # カスタム物語の設定を保存
+    # カスタム物語の設定を保存（拡張版）
     custom_story = {
       setting: params[:setting],
       theme: params[:theme],
       mood: params[:mood],
-      character_background: params[:character_background]
-    }
+      time_period: params[:time_period],
+      character_background: params[:character_background],
+      protagonist_goal: params[:protagonist_goal],
+      key_items: params[:key_items]
+    }.compact_blank
 
     # クリエイターモード開始時に進行をリセット
     @mbti_session.update!(
@@ -550,24 +553,37 @@ class MbtiController < ApplicationController
 
   def generate_next_question
     openai_service = OpenaiService.new
-    dimension = @mbti_session.random_dimension
-    question_number = @mbti_session.current_question_number
+
+    # StoryContextBuilderを使用して物語コンテキストを構築
+    context_builder = StoryContextBuilder.new(@mbti_session)
+
+    # フェーズに適した次元を選択（ランダムではなく戦略的に）
+    dimension = context_builder.recommended_dimension
+
+    # コンテキスト情報を取得
+    story_arc = context_builder.story_arc_instruction
+    cumulative_context = context_builder.cumulative_context
+    phase_instruction = context_builder.phase_specific_instruction
+    phase = context_builder.current_phase
+
     story_mode = @mbti_session.story_mode
     last_answer = @mbti_session.last_answer
-    story_progress = @mbti_session.story_progress
 
-    Rails.logger.info "Generating story question for dimension: #{dimension}, " \
-                      "question: #{question_number}, mode: #{story_mode}, " \
-                      "progress: #{story_progress}"
-    Rails.logger.info "Last answer: #{last_answer.inspect}"
+    Rails.logger.info "Generating story question v2: dimension=#{dimension}, " \
+                      "phase=#{phase}, question_number=#{context_builder.next_question_number}, " \
+                      "mode=#{story_mode}"
+    Rails.logger.info "Cumulative context present: #{cumulative_context.present?}"
 
-    question = openai_service.generate_continuing_story_mbti_question(
-      dimension,
-      question_number,
-      story_mode,
-      last_answer,
-      story_progress,
-      @mbti_session.custom_story
+    # 改善版メソッドを使用
+    question = openai_service.generate_story_question_v2(
+      dimension: dimension,
+      story_mode: story_mode,
+      story_arc: story_arc,
+      cumulative_context: cumulative_context,
+      phase_instruction: phase_instruction,
+      phase: phase,
+      last_answer: last_answer,
+      custom_story: @mbti_session.custom_story
     )
 
     if question
@@ -575,7 +591,7 @@ class MbtiController < ApplicationController
       questions = @mbti_session.questions || []
       questions << question.attributes
       @mbti_session.update!(questions: questions)
-      Rails.logger.info 'Successfully added question to session'
+      Rails.logger.info "Successfully added question to session (phase: #{phase})"
     end
 
     question
