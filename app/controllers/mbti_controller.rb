@@ -198,7 +198,7 @@ class MbtiController < ApplicationController
     session_id = params[:session_id] || session[:mbti_session_id]
 
     if session_id.blank?
-      Rails.logger.info "result_ai: session_id is blank"
+      Rails.logger.info 'result_ai: session_id is blank'
       redirect_to mbti_path
       return
     end
@@ -206,7 +206,7 @@ class MbtiController < ApplicationController
     @mbti_session = MbtiSession.find_by(session_id: session_id)
 
     if @mbti_session.nil?
-      Rails.logger.info "result_ai: mbti_session is nil"
+      Rails.logger.info 'result_ai: mbti_session is nil'
       redirect_to mbti_path
       return
     end
@@ -214,41 +214,41 @@ class MbtiController < ApplicationController
     Rails.logger.info "result_ai: completed=#{@mbti_session.completed}, completed?=#{@mbti_session.completed?}"
 
     unless @mbti_session.completed?
-      Rails.logger.info "result_ai: session not completed"
+      Rails.logger.info 'result_ai: session not completed'
       redirect_to mbti_path
       return
     end
 
     # ゲームマスターの場合はstory_stateから回答を取得
-    if @mbti_session.story_mode == 'game_master'
-      @answers = @mbti_session.story_state['history']&.map do |choice|
-        {
-          dimension: @mbti_session.story_state['current_scene']['question_dimension'],
-          choice: if choice.include?('外向')
-                    'A'
-                  elsif choice.include?('内向')
-                    'B'
-                  elsif choice.include?('感覚')
-                    'A'
-                  elsif choice.include?('直感')
-                    'B'
-                  elsif choice.include?('思考')
-                    'A'
-                  elsif choice.include?('感情')
-                    'B'
-                  elsif choice.include?('計画')
-                    'A'
-                  else
-                    choice.include?('柔軟') ? 'B' : 'A'
-                  end
-        }
-      end || []
-    else
-      @answers = @mbti_session.answers_array
-    end
+    @answers = if @mbti_session.story_mode == 'game_master'
+                 @mbti_session.story_state['history']&.map do |choice|
+                   {
+                     dimension: @mbti_session.story_state['current_scene']['question_dimension'],
+                     choice: if choice.include?('外向')
+                               'A'
+                             elsif choice.include?('内向')
+                               'B'
+                             elsif choice.include?('感覚')
+                               'A'
+                             elsif choice.include?('直感')
+                               'B'
+                             elsif choice.include?('思考')
+                               'A'
+                             elsif choice.include?('感情')
+                               'B'
+                             elsif choice.include?('計画')
+                               'A'
+                             else
+                               choice.include?('柔軟') ? 'B' : 'A'
+                             end
+                   }
+                 end || []
+               else
+                 @mbti_session.answers_array
+               end
 
     if @answers.empty?
-      Rails.logger.info "result_ai: answers is empty"
+      Rails.logger.info 'result_ai: answers is empty'
       redirect_to mbti_path
       return
     end
@@ -260,13 +260,13 @@ class MbtiController < ApplicationController
     @result = MbtiResult.calculate_mbti_type(@answers)
 
     # ゲームマスターの結果がある場合は取得
-    if @mbti_session.story_mode == 'game_master'
-      @story_state = @mbti_session.story_state
-      @achievement = @story_state['achievement'] if @story_state
-      @ending_text = @story_state['ending_text'] if @story_state
-      @mbti_analysis = @story_state['mbti_analysis'] if @story_state
-      @personality_insights = @story_state['personality_insights'] if @story_state
-    end
+    return unless @mbti_session.story_mode == 'game_master'
+
+    @story_state = @mbti_session.story_state
+    @achievement = @story_state['achievement'] if @story_state
+    @ending_text = @story_state['ending_text'] if @story_state
+    @mbti_analysis = @story_state['mbti_analysis'] if @story_state
+    @personality_insights = @story_state['personality_insights'] if @story_state
 
     # AI診断の詳細分析を生成
     # openai_service = OpenaiService.new
