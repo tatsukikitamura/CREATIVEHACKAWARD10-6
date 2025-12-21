@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-
 # MBTI診断機能を提供するコントローラー
 class MbtiController < ApplicationController
   before_action :set_mbti_session,
